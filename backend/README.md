@@ -2,7 +2,7 @@
 
 NestJS 11 API for the Unified School Management Platform.
 
-Engineering rules: [../AGENTS.md](../AGENTS.md). Product requirements: [../PRD.pdf](../PRD.pdf).
+Engineering rules: [../AGENTS.md](../AGENTS.md). Product requirements: [../PRD.md](../PRD.md).
 
 ---
 

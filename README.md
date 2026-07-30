@@ -4,7 +4,7 @@ Multi-tenant, enterprise-grade SaaS for school operations: student information, 
 
 The signature differentiator is the **unified parent identity**: a single global account through which a parent manages all of their children across any number of independent schools on the platform.
 
-Full product requirements: [PRD.pdf](PRD.pdf) (v2.0). Engineering rules: [AGENTS.md](AGENTS.md).
+Full product requirements: [PRD.md](PRD.md) (v2.0). Engineering rules: [AGENTS.md](AGENTS.md).
 
 ---
 
@@ -16,7 +16,7 @@ Full product requirements: [PRD.pdf](PRD.pdf) (v2.0). Engineering rules: [AGENTS
 ├── backend/     NestJS 11 API
 ├── docs/        architecture decisions and cross-cutting documentation
 ├── scripts/     repository tooling
-├── PRD.pdf      product requirements — source of truth for behaviour
+├── PRD.md       product requirements — source of truth for behaviour
 └── AGENTS.md    engineering rules — source of truth for how it is built
 ```
 
