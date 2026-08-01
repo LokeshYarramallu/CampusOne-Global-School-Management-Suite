@@ -16,9 +16,9 @@ Stack selection is intentionally *not* specified by the PRD (Appendix B defers i
 | Database / ORM | PostgreSQL with Prisma ORM |
 
 ### Open Decisions
-Do not silently pick one while implementing a feature — raise it, decide it, record it in `docs/`. (Resolved: database/ORM = PostgreSQL + Prisma — see [docs/decisions/0001-postgres-prisma.md](docs/decisions/0001-postgres-prisma.md).)
-1. **Tenant isolation strategy** (shared schema + discriminator vs. schema-per-tenant vs. db-per-tenant). PRD Risk #9 rates cross-tenant exposure **Critical**; PRD §12.2 requires per-tenant data residency. Decide before the first persisted module.
-2. **Auth provider** (self-hosted vs. managed IdP). PRD §5.1 requires SSO, MFA, biometric sign-in.
+Do not silently pick one while implementing a feature — raise it, decide it, record it in `docs/`. (Resolved: database/ORM = PostgreSQL + Prisma — see [docs/decisions/0001-postgres-prisma.md](docs/decisions/0001-postgres-prisma.md); auth provider = self-hosted Keycloak — see [docs/decisions/0002-keycloak-identity-provider.md](docs/decisions/0002-keycloak-identity-provider.md); tenant isolation = shared schema + discriminator with RLS backstop — see [docs/decisions/0003-tenant-isolation-shared-schema.md](docs/decisions/0003-tenant-isolation-shared-schema.md).)
+1. ~~**Tenant isolation strategy** (shared schema + discriminator vs. schema-per-tenant vs. db-per-tenant). PRD Risk #9 rates cross-tenant exposure **Critical**; PRD §12.2 requires per-tenant data residency. Decide before the first persisted module.~~ **Resolved 2026-08-01**: shared schema + `tenant_id` discriminator with PostgreSQL RLS backstop — see [ADR 0003](docs/decisions/0003-tenant-isolation-shared-schema.md).
+2. ~~**Auth provider** (self-hosted vs. managed IdP). PRD §5.1 requires SSO, MFA, biometric sign-in.~~ **Resolved 2026-08-01**: self-hosted Keycloak (single shared realm, branded headless login, OIDC) — see [ADR 0002](docs/decisions/0002-keycloak-identity-provider.md).
 3. **Mobile application** (PRD §6 requires exactly one unified app for all roles). Not in this repo yet.
 
 ## Core Engineering Principles
