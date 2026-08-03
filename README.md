@@ -1,4 +1,4 @@
-# Avunta — Unified School Management Platform
+# CampusOne — Unified School Management Platform
 
 Multi-tenant, enterprise-grade SaaS for school operations: student information, attendance, academics, examinations, fees, communication, transport, library, hostel, inventory, and HR — delivered through a web application and one unified mobile application that adapts to each user's role.
 
@@ -73,11 +73,13 @@ Run from within `frontend/` or `backend/`.
 
 ## Current Status
 
-Foundation only. Both applications are scaffolded with configuration, error handling, HTTP plumbing, and the module directory structure in place. No product modules are implemented yet.
+Foundation plus the first identity vertical slice. The repository now includes a development-only Platform Super Admin login, signed JWT cookie sessions, the initial tenant/RBAC schema, and a protected dashboard placeholder. Product modules are still to come.
 
 Per PRD Appendix C, Phase 1 (months 1–6) covers the platform foundation — identity, tenancy, unified parent identity, notifications — plus School Administration, core SIS, Attendance, and the unified mobile app with Parent View.
 
-Four decisions are open and blocking for persisted features: database and ORM, tenant isolation strategy, auth provider, and mobile application stack. See the "Open Decisions" section of [AGENTS.md](AGENTS.md).
+The database/ORM, tenant-isolation, and auth-provider decisions are resolved.
+The mobile application stack remains open. See [AGENTS.md](AGENTS.md) and the
+architecture decision records in `docs/decisions/`.
 
 ---
 

@@ -10,8 +10,10 @@
 import {
   LOG_LEVELS,
   NODE_ENVS,
+  AUTH_MODES,
   type LogLevel,
   type NodeEnv,
+  type AuthMode,
 } from './configuration';
 
 type RawEnv = Record<string, unknown>;
@@ -74,6 +76,45 @@ export function validateEnv(raw: RawEnv): RawEnv {
   // outright; catching it at boot beats debugging CORS failures in a browser.
   if (corsOrigins.length === 0 && nodeEnv !== 'test') {
     problems.push('CORS_ORIGINS must list at least one allowed origin');
+  }
+
+  const databaseUrl = asString(raw.DATABASE_URL);
+  if (!databaseUrl && nodeEnv !== 'test') {
+    problems.push('DATABASE_URL is required outside the test environment');
+  } else if (databaseUrl && !URL.canParse(databaseUrl)) {
+    problems.push(`DATABASE_URL is not a valid URL: "${databaseUrl}"`);
+  }
+
+  const authMode = asString(raw.AUTH_MODE) ?? 'local-dev';
+  if (!AUTH_MODES.includes(authMode as AuthMode)) {
+    problems.push(
+      `AUTH_MODE must be one of ${AUTH_MODES.join(' | ')}, got "${authMode}"`,
+    );
+  }
+
+  const jwtSecret = asString(raw.JWT_SECRET);
+  if (!jwtSecret && nodeEnv !== 'test') {
+    problems.push('JWT_SECRET is required outside the test environment');
+  } else if (nodeEnv === 'production' && jwtSecret && jwtSecret.length < 32) {
+    problems.push('JWT_SECRET must be at least 32 characters in production');
+  }
+
+  const jwtExpiresInSeconds = Number(raw.JWT_EXPIRES_IN_SECONDS ?? 3600);
+  if (!Number.isInteger(jwtExpiresInSeconds) || jwtExpiresInSeconds <= 0) {
+    problems.push('JWT_EXPIRES_IN_SECONDS must be a positive integer');
+  }
+
+  const devAdminEmail = asString(raw.DEV_PLATFORM_ADMIN_EMAIL);
+  if (
+    authMode === 'local-dev' &&
+    devAdminEmail &&
+    !devAdminEmail.includes('@')
+  ) {
+    problems.push('DEV_PLATFORM_ADMIN_EMAIL must be a valid email address');
+  }
+
+  if (nodeEnv === 'production' && authMode === 'local-dev') {
+    problems.push('AUTH_MODE=local-dev is not allowed in production');
   }
 
   if (problems.length > 0) {

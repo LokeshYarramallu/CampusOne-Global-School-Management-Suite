@@ -72,7 +72,7 @@ A user views and terminates their own active sessions, changes their password, u
 
 ### User Story 5 - Administrator manages roles, permissions, and scope (Priority: P1)
 
-A School Administrator assigns built-in roles from the platform's nineteen-role catalog, creates custom roles, adjusts permission assignments, and configures role inheritance — all with data scope (a teacher sees only assigned classes; a parent sees only their children). Every permission change is recorded with actor, timestamp, and before/after state.
+A School Admin Office user assigns built-in roles from the platform's initial seven-role catalog, creates custom roles later, and adjusts permission assignments with data scope (a teacher sees only assigned classes; a parent/guardian sees only linked children). Every permission change is recorded with actor, timestamp, and before/after state.
 
 **Why this priority**: RBAC with scope is the authorization backbone for every module and a P0 PRD requirement (§3.6).
 
@@ -272,7 +272,7 @@ A user or authorized party requests deletion (right-to-erasure) or export (data 
 
 #### Authorization / RBAC (PRD §3.6)
 
-- **FR-015**: The system MUST provide the nineteen platform roles defined in PRD §3, each with a curated default permission set.
+- **FR-015**: The system MUST provide the seven initial platform roles defined by this feature, each with a curated default permission set; additional specialized roles may be added later.
 - **FR-016**: Permissions MUST be organized as Module → Feature → Action → Scope, where scope constrains data visibility (e.g. a teacher sees only assigned classes; a parent sees only their children).
 - **FR-017**: The system MUST support role hierarchies with permission inheritance (e.g. Vice Principal inherits relevant Teacher permissions).
 - **FR-018**: The system MUST allow School Administrators to create custom roles and adjust permission assignments within policy limits.
@@ -339,7 +339,7 @@ A user or authorized party requests deletion (right-to-erasure) or export (data 
 - **Tenant**: An isolated school (or school group) — the unit of data isolation and configuration. Owns foundation settings and module-activation flags. Identified server-side from the session; never from client input.
 - **Tenant Configuration**: Versioned foundation settings for a tenant — timezone, currency, supported languages, per-module activation flags. (Academic/grading/holiday settings are owned by other modules.)
 - **User Identity**: A person who can authenticate. Carries one or more tenant associations and one or more role assignments. Distinguished from a Parent Identity (which is platform-level and cross-tenant).
-- **Role**: One of the nineteen platform roles or a custom role. Carries a permission set and may inherit another role's permissions.
+- **Role**: One of the seven initial platform roles or a custom role. Carries a permission set and may inherit another role's permissions.
 - **Permission**: A unit of access organized as Module → Feature → Action → Scope.
 - **Role Assignment**: The binding of a user to a role within a tenant (and, where relevant, to a data scope such as assigned classes).
 - **Session**: An authenticated session for a user, with device context; subject to concurrent limits and termination.

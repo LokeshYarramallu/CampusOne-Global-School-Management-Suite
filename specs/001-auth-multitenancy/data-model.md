@@ -81,11 +81,12 @@ model Permission {
   @@map("permission")
 }
 
-// Roles: built-in (19, global — tenantId null) and custom (tenant-scoped).
+// Roles: seven initial built-ins (global — tenantId null) and custom roles
+// (tenant-scoped) can be added later without changing the identity model.
 model Role {
   id          String @id @default(uuid()) @db.Uuid
   tenantId    String? @db.Uuid // null = built-in platform role
-  key         String  // e.g. SCHOOL_ADMIN, or custom key
+  key         String  // e.g. SCHOOL_ADMIN_OFFICE, or custom key
   displayName String
   isBuiltIn   Boolean @default(false)
   assignments RoleAssignment[]

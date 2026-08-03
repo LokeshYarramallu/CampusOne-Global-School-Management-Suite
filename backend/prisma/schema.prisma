@@ -1,0 +1,280 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Tenant {
+  id                String               @id @default(uuid()) @db.Uuid
+  slug              String               @unique
+  displayName       String               @map("display_name")
+  status            TenantStatus         @default(ACTIVE)
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+  configuration     TenantConfiguration?
+  roles             Role[]
+  roleAssignments   RoleAssignment[]
+  featureFlags      FeatureFlag[]
+  parentSchoolLinks ParentSchoolLink[]
+  auditRecords      AuditRecord[]
+
+  @@map("tenant")
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+model TenantConfiguration {
+  id                 String   @id @default(uuid()) @db.Uuid
+  tenantId           String   @unique @map("tenant_id") @db.Uuid
+  tenant             Tenant   @relation(fields: [tenantId], references: [id])
+  timezone           String
+  currency           String
+  languages          String[]
+  moduleActivation   Json     @map("module_activation")
+  passwordPolicy     Json     @map("password_policy")
+  mfaPolicy          Json     @map("mfa_policy")
+  notificationPolicy Json     @map("notification_policy")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId])
+  @@map("tenant_configuration")
+}
+
+model UserIdentity {
+  id              String                 @id @default(uuid()) @db.Uuid
+  keycloakSubject String?                @unique @map("keycloak_subject")
+  email           String                 @unique
+  phone           String?
+  passwordHash    String?                @map("password_hash")
+  status          UserIdentityStatus     @default(ACTIVE)
+  failedLoginCount Int                   @default(0) @map("failed_login_count")
+  lockedUntil     DateTime?              @map("locked_until")
+  lastLoginAt     DateTime?              @map("last_login_at")
+  createdAt       DateTime               @default(now()) @map("created_at")
+  updatedAt       DateTime               @updatedAt @map("updated_at")
+  roleAssignments RoleAssignment[]
+  parentIdentity  ParentIdentity?
+  providerLinks   IdentityProviderLink[]
+  sessions        AuthSession[]
+  passwordResets  PasswordResetToken[]
+  mfaFactors      MfaFactor[]
+  securityEvents  SecurityEvent[]
+
+  @@map("user_identity")
+}
+
+model AuthSession {
+  id             String       @id @default(uuid()) @db.Uuid
+  userIdentityId String       @map("user_identity_id") @db.Uuid
+  tokenHash      String       @unique @map("token_hash")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  expiresAt      DateTime     @map("expires_at")
+  lastUsedAt     DateTime?    @map("last_used_at")
+  revokedAt      DateTime?    @map("revoked_at")
+  replacedById   String?      @map("replaced_by_id") @db.Uuid
+  user           UserIdentity @relation(fields: [userIdentityId], references: [id], onDelete: Cascade)
+
+  @@index([userIdentityId, revokedAt])
+  @@index([expiresAt, revokedAt])
+  @@map("auth_session")
+}
+
+model PasswordResetToken {
+  id             String       @id @default(uuid()) @db.Uuid
+  userIdentityId String       @map("user_identity_id") @db.Uuid
+  tokenHash      String       @unique @map("token_hash")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  expiresAt      DateTime     @map("expires_at")
+  usedAt         DateTime?    @map("used_at")
+  user           UserIdentity @relation(fields: [userIdentityId], references: [id], onDelete: Cascade)
+
+  @@index([userIdentityId, usedAt])
+  @@index([expiresAt, usedAt])
+  @@map("password_reset_token")
+}
+
+model MfaFactor {
+  id             String       @id @default(uuid()) @db.Uuid
+  userIdentityId String       @map("user_identity_id") @db.Uuid
+  factorType     String       @map("factor_type")
+  secret         String       @map("secret_encrypted")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  verifiedAt     DateTime?    @map("verified_at")
+  disabledAt     DateTime?    @map("disabled_at")
+  user           UserIdentity @relation(fields: [userIdentityId], references: [id], onDelete: Cascade)
+
+  @@index([userIdentityId, disabledAt])
+  @@map("mfa_factor")
+}
+
+model SecurityEvent {
+  id             String        @id @default(uuid()) @db.Uuid
+  userIdentityId String?       @map("user_identity_id") @db.Uuid
+  eventType      String        @map("event_type")
+  ipHash         String?       @map("ip_hash")
+  userAgent      String?       @map("user_agent")
+  metadata       Json?
+  occurredAt     DateTime      @default(now()) @map("occurred_at")
+  user           UserIdentity? @relation(fields: [userIdentityId], references: [id], onDelete: SetNull)
+
+  @@index([userIdentityId, occurredAt])
+  @@index([eventType, occurredAt])
+  @@map("security_event")
+}
+
+enum UserIdentityStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+model IdentityProviderLink {
+  id              String       @id @default(uuid()) @db.Uuid
+  userIdentityId  String       @map("user_identity_id") @db.Uuid
+  provider        String
+  providerSubject String       @map("provider_subject")
+  user            UserIdentity @relation(fields: [userIdentityId], references: [id])
+
+  @@unique([provider, providerSubject])
+  @@index([userIdentityId])
+  @@map("identity_provider_link")
+}
+
+model Permission {
+  id        String           @id @default(uuid()) @db.Uuid
+  module    String
+  feature   String
+  action    String
+  roleLinks RolePermission[]
+
+  @@unique([module, feature, action])
+  @@map("permission")
+}
+
+model Role {
+  id          String           @id @default(uuid()) @db.Uuid
+  tenantId    String?          @map("tenant_id") @db.Uuid
+  tenant      Tenant?          @relation(fields: [tenantId], references: [id])
+  key         String           @unique
+  displayName String           @map("display_name")
+  isBuiltIn   Boolean          @default(false) @map("is_built_in")
+  assignments RoleAssignment[]
+  permissions RolePermission[]
+
+  @@index([tenantId])
+  @@map("role")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id") @db.Uuid
+  permissionId String     @map("permission_id") @db.Uuid
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permission")
+}
+
+model RoleAssignment {
+  id        String       @id @default(uuid()) @db.Uuid
+  tenantId  String       @map("tenant_id") @db.Uuid
+  tenant    Tenant       @relation(fields: [tenantId], references: [id])
+  userId    String       @map("user_id") @db.Uuid
+  user      UserIdentity @relation(fields: [userId], references: [id])
+  roleId    String       @map("role_id") @db.Uuid
+  role      Role         @relation(fields: [roleId], references: [id])
+  scope     Json
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  @@unique([tenantId, userId, roleId])
+  @@index([tenantId, userId])
+  @@index([tenantId, roleId])
+  @@map("role_assignment")
+}
+
+model ParentIdentity {
+  id             String              @id @default(uuid()) @db.Uuid
+  userIdentityId String              @unique @map("user_identity_id") @db.Uuid
+  user           UserIdentity        @relation(fields: [userIdentityId], references: [id])
+  verifiedEmail  String              @map("verified_email")
+  verifiedPhone  String?             @map("verified_phone")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  schoolLinks    ParentSchoolLink[]
+  familyAccess   FamilyAccessGrant[]
+
+  @@map("parent_identity")
+}
+
+model ParentSchoolLink {
+  id               String           @id @default(uuid()) @db.Uuid
+  parentIdentityId String           @map("parent_identity_id") @db.Uuid
+  parent           ParentIdentity   @relation(fields: [parentIdentityId], references: [id])
+  tenantId         String           @map("tenant_id") @db.Uuid
+  tenant           Tenant           @relation(fields: [tenantId], references: [id])
+  status           ParentLinkStatus @default(PENDING)
+  consentAt        DateTime?        @map("consent_at")
+  createdAt        DateTime         @default(now()) @map("created_at")
+
+  @@unique([parentIdentityId, tenantId])
+  @@index([tenantId, parentIdentityId])
+  @@map("parent_school_link")
+}
+
+enum ParentLinkStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+}
+
+model FamilyAccessGrant {
+  id               String         @id @default(uuid()) @db.Uuid
+  parentIdentityId String         @map("parent_identity_id") @db.Uuid
+  parent           ParentIdentity @relation(fields: [parentIdentityId], references: [id])
+  userIdentityId   String         @map("user_identity_id") @db.Uuid
+  relationship     String
+  scope            Json
+  revokedAt        DateTime?      @map("revoked_at")
+  createdAt        DateTime       @default(now()) @map("created_at")
+
+  @@index([parentIdentityId])
+  @@index([userIdentityId])
+  @@map("family_access_grant")
+}
+
+model FeatureFlag {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  feature   String
+  enabled   Boolean  @default(false)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([tenantId, feature])
+  @@index([tenantId, feature])
+  @@map("feature_flag")
+}
+
+model AuditRecord {
+  id            String   @id @default(uuid()) @db.Uuid
+  tenantId      String   @map("tenant_id") @db.Uuid
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  actorId       String?  @map("actor_id") @db.Uuid
+  action        String
+  targetType    String   @map("target_type")
+  targetId      String?  @map("target_id") @db.Uuid
+  occurredAt    DateTime @default(now()) @map("occurred_at")
+  deviceContext Json     @map("device_context")
+  before        Json?
+  after         Json?
+  prevHash      String?  @map("prev_hash")
+  hash          String
+
+  @@index([tenantId, occurredAt])
+  @@map("audit_record")
+}

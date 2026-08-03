@@ -31,7 +31,7 @@ Technical decisions were made interactively with the user (no silent defaults). 
 
 **Constraints**: Cross-tenant exposure is **Critical** (PRD Risk #9) — tenant context server-derived only, never from client input; FERPA/GDPR/COPPA — no personal data in logs/errors/URLs, data minimization, real deletion/export paths; all endpoints under `/api/v1`; one standard error envelope (`AppException`); ORM models never returned as API contracts; every feature behind a per-tenant backend gate.
 
-**Scale/Scope**: Thousands of tenants; 19 roles + custom roles; 400+ permissions; 7 backend modules + 7 frontend modules.
+**Scale/Scope**: Thousands of tenants; seven initial roles plus future custom and specialized roles; 400+ permissions at full product scope; 7 backend modules + 7 frontend modules.
 
 ## Constitution Check
 

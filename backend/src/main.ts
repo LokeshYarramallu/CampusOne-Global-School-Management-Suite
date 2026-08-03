@@ -60,7 +60,7 @@ async function bootstrap(): Promise<void> {
   await app.listen(port);
 
   Logger.log(
-    `Avunta API listening on http://localhost:${port}/api/v1 ` +
+    `CampusOne API listening on http://localhost:${port}/api/v1 ` +
       `[${config.get('nodeEnv', { infer: true })}]`,
     'Bootstrap',
   );

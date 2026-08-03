@@ -1,5 +1,5 @@
 /**
- * The error envelope every Avunta API endpoint returns, and the client-side
+ * The error envelope every CampusOne API endpoint returns, and the client-side
  * error type modules should catch.
  *
  * Contract (see AGENTS.md, "API Contract Rules"):

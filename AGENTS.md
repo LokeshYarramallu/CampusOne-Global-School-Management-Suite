@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Purpose
-This repository implements **Avunta** — the Unified School Management Platform (USMP) described in [PRD.md](PRD.md): a multi-tenant, enterprise-grade SaaS product for schools, built as a modular, maintainable, testable, production-oriented system with separate frontend and backend codebases, both feature-based.
+This repository implements **CampusOne** — the Unified School Management Platform (USMP) described in [PRD.md](PRD.md): a multi-tenant, enterprise-grade SaaS product for schools, built as a modular, maintainable, testable, production-oriented system with separate frontend and backend codebases, both feature-based.
 **The PRD is the source of truth for product behaviour. This file is the source of truth for how that behaviour is built.**
 
 ## Stack
@@ -72,7 +72,7 @@ Cross-tenant data exposure is rated **Critical** in the PRD (Risk #9). Treat ten
 ## Authorization Rules
 - Authorization is enforced on the backend, on every request. Frontend role checks are presentation only.
 - Never trust client-provided IDs, roles, scores, permissions, or ownership.
-- PRD §3.6: RBAC is `Module → Feature → Action → Scope`, 400+ permissions, 19 roles. Checks must include **scope** ("a teacher may read attendance *for their assigned classes*").
+- PRD §3.6: RBAC is `Module → Feature → Action → Scope`, 400+ permissions. The initial implementation seeds seven roles; specialized roles can be added later. Checks must include **scope** ("a teacher may read attendance *for their assigned classes*").
 - One person may hold multiple roles across schools under one identity. Never merge permissions across role views — Parent View gets exactly the Parent set, never a union with Teacher.
 - Every permission change is written to the audit log with actor, timestamp, before/after state.
 

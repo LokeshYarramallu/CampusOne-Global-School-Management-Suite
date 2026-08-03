@@ -1,4 +1,4 @@
-# Avunta — Frontend
+# CampusOne — Frontend
 
 Next.js 16 web application for the Unified School Management Platform.
 
@@ -132,6 +132,17 @@ Vitest with jsdom and Testing Library. Module tests live in each module's `tests
 ```bash
 npm run test
 ```
+
+## Login flow
+
+The login screen is available at `/login` (and `/`). In development, use:
+
+- Email: `platform-admin@campusone.local`
+- Password: `CampusOneAdmin!2026`
+
+The form calls `POST /api/v1/auth/login`. The backend sets an httpOnly JWT
+cookie, so the browser never stores or reads the token. The dashboard validates
+the cookie through `GET /api/v1/auth/me`.
 
 Every feature should cover the primary flow, input validation, error handling, permission behaviour, and empty/loading/error UI states.
 

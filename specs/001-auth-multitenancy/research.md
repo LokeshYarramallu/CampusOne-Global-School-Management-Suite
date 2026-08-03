@@ -123,7 +123,7 @@ All Technical Context unknowns were resolved through interactive decisions with 
 **Decision**: **DB-stored** permission catalog (Module → Feature → Action tuples, seeded), with role-permission and custom-role mappings in the DB. Scope (the `Scope` dimension) is evaluated at query time via scope rules.
 
 **Integration patterns**:
-- `permission` catalog table seeded with all Module/Feature/Action tuples; `role` and `role_permission` tables hold built-in (19) and custom roles and their mappings; `role_inheritance` for hierarchy.
+- `permission` catalog table seeded with Module/Feature/Action tuples; `role` and `role_permission` tables hold the seven initial built-in roles and future custom roles. Role inheritance is deferred until specialized roles are introduced.
 - `role_assignment` binds a user to a role within a tenant with a scope (e.g. assigned class/section ids) where applicable.
 - A `PermissionsGuard` (in `core/auth`) evaluates the required permission on every request; a `ScopeResolver` narrows queries by the assignment's scope.
 - **Consistency guard**: permissions referenced in code (`@RequirePermission('...')`) must exist in the catalog — a startup/test check asserts this to prevent drift between code and DB catalog.

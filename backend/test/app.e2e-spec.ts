@@ -68,4 +68,48 @@ describe('API (e2e)', () => {
       await request(app.getHttpServer()).get('/health').expect(404);
     });
   });
+
+  describe('development authentication', () => {
+    it('logs in the sample Platform Super Admin and sets an httpOnly cookie', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/v1/auth/login')
+        .send({
+          email: 'platform-admin@campusone.local',
+          password: 'CampusOneAdmin!2026',
+        })
+        .expect(201);
+
+      const loginBody = response.body as {
+        user: { roleKey: string; roleName: string };
+      };
+      expect(loginBody.user).toMatchObject({
+        roleKey: 'PLATFORM_SUPER_ADMIN',
+        roleName: 'Platform Super Admin',
+      });
+      expect(response.headers['set-cookie'][0]).toContain(
+        'campusone_access_token=',
+      );
+      expect(response.headers['set-cookie'][0]).toContain('HttpOnly');
+    });
+
+    it('rejects invalid credentials and protects the current-user endpoint', async () => {
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/login')
+        .send({
+          email: 'platform-admin@campusone.local',
+          password: 'incorrect-password',
+        })
+        .expect(401)
+        .expect(({ body }: { body: unknown }) => {
+          expect((body as ApiErrorBody).error.code).toBe('INVALID_CREDENTIALS');
+        });
+
+      await request(app.getHttpServer())
+        .get('/api/v1/auth/me')
+        .expect(401)
+        .expect(({ body }: { body: unknown }) => {
+          expect((body as ApiErrorBody).error.code).toBe('UNAUTHENTICATED');
+        });
+    });
+  });
 });

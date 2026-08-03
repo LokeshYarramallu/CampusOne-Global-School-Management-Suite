@@ -80,7 +80,7 @@ Notification Center	1
 
 # **1\. Executive Summary**
 
-The Avunta (USMP) is a multi-tenant, enterprise-grade SaaS product that modernizes how educational institutions operate and how families engage with them. It consolidates every aspect of school operations — student information, attendance, academics, examinations, fees, communication, transport, library, hostel, inventory, and human resources — into a single coherent product, delivered through a web application and **one unified mobile application** that adapts to each user's role.
+CampusOne (USMP) is a multi-tenant, enterprise-grade SaaS product that modernizes how educational institutions operate and how families engage with them. It consolidates every aspect of school operations — student information, attendance, academics, examinations, fees, communication, transport, library, hostel, inventory, and human resources — into a single coherent product, delivered through a web application and **one unified mobile application** that adapts to each user's role.
 
 The education technology market is projected to reach $404 billion globally by 2028, with school management systems among its fastest-growing segments. Extensive competitive analysis of leading platforms (PowerSchool, Blackbaud, Infinite Campus, Gradelink, Teachmint, Classter, OpenEduCat) revealed persistent gaps: fragmented user experiences, dated interfaces, weak mobile capabilities, and — most significantly — no support for families whose children attend different schools.
 
@@ -1481,7 +1481,7 @@ Product-level commitments those designs must satisfy (performance, availability,
 
 This document is the property of the Product Development organization. Unauthorized distribution is prohibited. Feedback should be submitted through the designated review channel. Changes require approval from the Product Director; downstream technical documents require joint approval with the Engineering Lead.
 
-**Avunta**
+**CampusOne**
 
 Product Requirements Document  |  Version 2.0  |  July 2026
 

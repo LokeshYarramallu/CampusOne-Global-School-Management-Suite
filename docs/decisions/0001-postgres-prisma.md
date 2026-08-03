@@ -56,4 +56,4 @@ PostgreSQL was selected over alternatives (e.g. MySQL) for its stronger concurre
 
 **Open items this does not decide**
 
-- Tenant isolation *strategy* (shared schema + tenant discriminator vs. schema-per-tenant vs. database-per-tenant) remains Open Decision #1 in AGENTS.md and must be decided before the first persisted module. This ADR is compatible with all three; the chosen strategy will shape how `tenantId` scoping and `schema.prisma` are structured.
+- Tenant isolation is resolved by [ADR 0003](0003-tenant-isolation-shared-schema.md): shared PostgreSQL schema, tenant discriminator, and RLS backstop.

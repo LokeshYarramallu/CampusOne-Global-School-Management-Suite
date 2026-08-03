@@ -1,4 +1,4 @@
-# Avunta — Backend
+# CampusOne — Backend
 
 NestJS 11 API for the Unified School Management Platform.
 
@@ -24,7 +24,7 @@ curl http://localhost:3001/api/v1/health
 
 NestJS 11 · TypeScript strict · Express · `@nestjs/config` · `class-validator` + `class-transformer` · Jest · ESLint · Prettier
 
-No database yet — the ORM and tenant isolation decisions are still open. See "Open Decisions" in [../AGENTS.md](../AGENTS.md).
+PostgreSQL and Prisma are wired for the authentication and multi-tenant foundation. A development-only JWT login is available for the sample Platform Super Admin; Keycloak remains the planned production identity provider.
 
 ---
 
@@ -44,6 +44,20 @@ No database yet — the ORM and tenant isolation decisions are still open. See "
 | `npm run format` | Prettier, write |
 
 ---
+
+## Database setup
+
+PostgreSQL and Prisma are wired for the authentication and multi-tenant
+foundation. Copy `.env.example` to `.env`, set `DATABASE_URL`, and run:
+
+```bash
+npm run db:generate
+npm run db:migrate:deploy
+npm run db:seed
+```
+
+The first migration creates tenant-aware identity/RBAC tables and PostgreSQL
+RLS policies. Repositories must still apply application-level tenant filters.
 
 ## Structure
 
