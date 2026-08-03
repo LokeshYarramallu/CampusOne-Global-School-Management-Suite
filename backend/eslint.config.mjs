@@ -32,4 +32,15 @@ export default tseslint.config(
       "prettier/prettier": ["error", { endOfLine: "auto" }],
     },
   },
+  {
+    // `unbound-method` exists to catch a real hazard: passing a class method
+    // somewhere it will be called with the wrong `this`. Asserting on a Jest
+    // mock — `expect(repo.findThing).not.toHaveBeenCalled()` — trips it, but a
+    // `jest.fn()` has no `this` to lose, so every hit in a spec file is a false
+    // positive. Scoped to tests only; production code keeps the rule.
+    files: ['**/*.spec.ts', '**/tests/**/*.ts'],
+    rules: {
+      '@typescript-eslint/unbound-method': 'off',
+    },
+  },
 );

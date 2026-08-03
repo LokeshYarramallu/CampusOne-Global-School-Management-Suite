@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 
 type NoticeTone = 'warning' | 'error' | 'info';
 
@@ -8,6 +8,12 @@ interface StatusNoticeProps {
   children: ReactNode;
   action?: ReactNode;
   role?: 'alert' | 'status';
+  /**
+   * Set when the caller moves focus here — an error a keyboard user has to
+   * hunt for is an error they will miss. Adds `tabIndex={-1}` so the notice
+   * can receive focus programmatically without entering the tab order.
+   */
+  ref?: Ref<HTMLDivElement>;
 }
 
 const toneStyles: Record<NoticeTone, { rail: string; icon: string; eyebrow: string; body: string }> = {
@@ -41,10 +47,10 @@ function NoticeIcon({ tone }: { tone: NoticeTone }) {
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="2"><path d="m12 4 8 15H4L12 4Z" /><path d="M12 9v4M12 16h.01" /></svg>;
 }
 
-export function StatusNotice({ tone, eyebrow, children, action, role = 'status' }: StatusNoticeProps) {
+export function StatusNotice({ tone, eyebrow, children, action, role = 'status', ref }: StatusNoticeProps) {
   const styles = toneStyles[tone];
   return (
-    <div role={role} className={`campusone-status-in relative flex items-center gap-3 overflow-hidden border-l-[3px] px-3.5 py-3.5 ${styles.rail}`}>
+    <div ref={ref} role={role} tabIndex={ref ? -1 : undefined} className={`campusone-status-in relative flex items-center gap-3 overflow-hidden border-l-[3px] px-3.5 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-[#f85001]/40 ${styles.rail}`}>
       <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-[10px] ${styles.icon}`}><NoticeIcon tone={tone} /></span>
       <div className="min-w-0 flex-1">
         <p className={`text-[0.64rem] font-bold uppercase tracking-[0.16em] ${styles.eyebrow}`}>{eyebrow}</p>

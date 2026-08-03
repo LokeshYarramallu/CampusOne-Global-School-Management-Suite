@@ -90,6 +90,7 @@ To add a variable: add it to `.env.example` with a safe placeholder, destructure
 | `NEXT_PUBLIC_API_BASE_URL` | yes | — | Base URL of the API, including the `/api/v1` prefix |
 | `NEXT_PUBLIC_API_TIMEOUT_MS` | no | `15000` | Milliseconds before a request is aborted |
 | `NEXT_PUBLIC_APP_ENV` | no | `development` | `development` \| `staging` \| `production` |
+| `NEXT_PUBLIC_DEV_ADMIN_EMAIL` | no | — | Address of the local sample account, shown as a sign-in hint. Dropped when `NEXT_PUBLIC_APP_ENV=production`. The matching password is **not** a `NEXT_PUBLIC` value and never reaches the browser — see `backend/.env.example` |
 
 ### HTTP — `src/core/http/`
 

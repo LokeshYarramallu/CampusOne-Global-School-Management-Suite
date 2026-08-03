@@ -32,6 +32,12 @@ export interface AppConfig {
   jwtExpiresInSeconds: number;
   devPlatformAdminEmail: string;
   devPlatformAdminPasswordHash: string;
+  /** Requests allowed per IP, per window, against the sign-in endpoints. */
+  loginRateLimitAttempts: number;
+  loginRateLimitWindowSeconds: number;
+  /** Consecutive failures before an account is temporarily locked. */
+  loginMaxFailedAttempts: number;
+  loginLockoutMinutes: number;
 }
 
 /**
@@ -61,5 +67,11 @@ export function loadConfiguration(): AppConfig {
     devPlatformAdminPasswordHash:
       process.env.DEV_PLATFORM_ADMIN_PASSWORD_HASH ??
       '$2b$12$Z7wzlqSHxF8PM1WsOjfyG.qjsKY3fiBCvhtH.4htCjaTKuqZffZV6',
+    loginRateLimitAttempts: Number(process.env.LOGIN_RATE_LIMIT_ATTEMPTS ?? 10),
+    loginRateLimitWindowSeconds: Number(
+      process.env.LOGIN_RATE_LIMIT_WINDOW_SECONDS ?? 60,
+    ),
+    loginMaxFailedAttempts: Number(process.env.LOGIN_MAX_FAILED_ATTEMPTS ?? 5),
+    loginLockoutMinutes: Number(process.env.LOGIN_LOCKOUT_MINUTES ?? 15),
   };
 }

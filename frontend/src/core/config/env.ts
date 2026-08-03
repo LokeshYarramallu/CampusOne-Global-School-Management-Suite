@@ -18,6 +18,12 @@ export interface Env {
   apiTimeoutMs: number;
   appEnv: AppEnvironment;
   isProduction: boolean;
+  /**
+   * Email address of the local sample account, shown as a sign-in hint outside
+   * production. An address is not a credential — the matching password is
+   * never sent to the browser. It lives in `backend/.env.example`.
+   */
+  devAdminEmail?: string;
 }
 
 class EnvValidationError extends Error {
@@ -36,6 +42,7 @@ function parse(): Env {
   const rawApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
   const rawApiTimeoutMs = process.env.NEXT_PUBLIC_API_TIMEOUT_MS;
   const rawAppEnv = process.env.NEXT_PUBLIC_APP_ENV;
+  const rawDevAdminEmail = process.env.NEXT_PUBLIC_DEV_ADMIN_EMAIL;
 
   if (!rawApiBaseUrl) {
     problems.push('NEXT_PUBLIC_API_BASE_URL is required');
@@ -55,16 +62,27 @@ function parse(): Env {
     );
   }
 
+  if (rawDevAdminEmail && !rawDevAdminEmail.includes('@')) {
+    problems.push(
+      `NEXT_PUBLIC_DEV_ADMIN_EMAIL must be an email address, got "${rawDevAdminEmail}"`,
+    );
+  }
+
   if (problems.length > 0) {
     throw new EnvValidationError(problems);
   }
+
+  const isProduction = appEnv === 'production';
 
   return {
     // Trailing slashes are stripped so callers can always join with a leading "/".
     apiBaseUrl: rawApiBaseUrl!.replace(/\/+$/, ''),
     apiTimeoutMs,
     appEnv,
-    isProduction: appEnv === 'production',
+    isProduction,
+    // Dropped outright in production, so a stray value in a deployed
+    // environment cannot surface a sign-in hint to real users.
+    devAdminEmail: isProduction ? undefined : rawDevAdminEmail,
   };
 }
 

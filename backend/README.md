@@ -116,8 +116,35 @@ To add a variable: add it to `.env.example` with a safe placeholder, validate it
 | `PORT` | no | `3001` | HTTP listen port |
 | `CORS_ORIGINS` | yes | — | Comma-separated allowed browser origins. `*` is rejected — this API is credentialed |
 | `LOG_LEVEL` | no | `log` | `error` \| `warn` \| `log` \| `debug` \| `verbose` |
+| `DATABASE_URL` | yes¹ | — | PostgreSQL connection string for Prisma. The API's role must have neither `SUPERUSER` nor `BYPASSRLS` — see *Tenant isolation* below |
+| `AUTH_MODE` | no | `local-dev` | `local-dev` \| `keycloak`. `local-dev` is rejected in production |
+| `JWT_SECRET` | yes¹ | — | Session signing key; ≥ 32 characters in production |
+| `JWT_EXPIRES_IN_SECONDS` | no | `3600` | Session lifetime |
+| `DEV_PLATFORM_ADMIN_EMAIL` | no | `platform-admin@campusone.local` | Sample account address, `local-dev` only |
+| `DEV_PLATFORM_ADMIN_PASSWORD_HASH` | no | sample hash | bcrypt hash for the sample account, `local-dev` only |
+| `LOGIN_RATE_LIMIT_ATTEMPTS` | no | `10` | Sign-in requests allowed per IP per window |
+| `LOGIN_RATE_LIMIT_WINDOW_SECONDS` | no | `60` | Length of that window |
+| `LOGIN_MAX_FAILED_ATTEMPTS` | no | `5` | Consecutive failures before an account locks |
+| `LOGIN_LOCKOUT_MINUTES` | no | `15` | How long the lock lasts |
+
+¹ Required outside the `test` environment.
 
 `.env` and `.env.local` are gitignored and must never be committed. `.env.local` overrides `.env`.
+
+### Tenant isolation — `src/infrastructure/prisma/`
+
+Two layers, per [ADR 0003](../docs/decisions/0003-tenant-isolation-shared-schema.md) and [ADR 0005](../docs/decisions/0005-tenant-context-propagation.md):
+
+1. **Application scoping is primary.** Repositories add `where: { tenantId }` to every tenant-owned query.
+2. **Row-level security is the backstop**, catching a forgotten predicate.
+
+Every tenant-owned read goes through `TenantScopedPrisma.run()`, which opens an interactive transaction and issues `SET LOCAL app.tenant_id` before any query. `SET LOCAL` — not `SET` — is what makes this safe under connection pooling: it reverts at transaction end, so a pooled connection cannot carry one request's tenant into the next.
+
+A tenant-owned read with no tenant context raises `TENANT_CONTEXT_MISSING`. It deliberately does **not** return an empty list: an empty result is indistinguishable from "this tenant has no rows", and that ambiguity is what let a missing tenant context go unnoticed through two migrations.
+
+**The database role matters.** RLS policies are not evaluated at all for a role holding `SUPERUSER` or `BYPASSRLS`, which makes the backstop silently inert. No application code can grant itself the right property, so the app detects and reports instead: `PrismaService` checks `pg_roles` at boot and logs a prominent warning when the connected role can bypass RLS.
+
+Any new tenant-owned table needs `tenant_id`, an index leading with it, **and** an RLS policy — all in the migration that creates it.
 
 ### Error Handling — `src/core/http/`
 
@@ -148,6 +175,7 @@ Validation-pipe rejections become `VALIDATION_FAILED` with the field-level messa
 * **Global prefix** `api/v1` — every route is versioned.
 * **`ValidationPipe`** with `whitelist` and `forbidNonWhitelisted`. Undeclared properties are stripped and the request is rejected, so a client cannot smuggle `tenantId` or `role` into a payload.
 * **`AllExceptionsFilter`** for the error envelope.
+* **`RateLimitGuard`** registered as `APP_GUARD`. Two buckets: a generous `default` every route inherits, and a `strict` one that applies only to handlers marked `@StrictRateLimit()` — sign-in, and anything else that accepts credentials. A throttled request returns `RATE_LIMITED` in the standard envelope, not the framework's `ThrottlerException` text.
 * **CORS** restricted to `CORS_ORIGINS` with `credentials: true` for the httpOnly session cookie.
 * **Shutdown hooks** so in-flight requests finish on SIGTERM during a rolling deploy.
 

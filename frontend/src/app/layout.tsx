@@ -2,7 +2,12 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Sign in · CampusOne',
+  // Routes supply their own title; `template` frames it. Without this every
+  // page inherited "Sign in · CampusOne", including the dashboard.
+  title: {
+    default: 'CampusOne',
+    template: '%s · CampusOne',
+  },
   description: 'Secure access to the CampusOne school management platform.',
 };
 

@@ -1,3 +1,10 @@
+import { BUTTON_RADIUS, FIELD_HEIGHT, FIELD_RADIUS } from '@/modules/identity';
+
+/**
+ * Placeholder shown while the login route loads. It mirrors the real form's
+ * geometry via the shared field tokens, so the swap to the live form does not
+ * shift anything on screen.
+ */
 export default function LoginLoading() {
   return (
     <main aria-busy="true" aria-label="Loading CampusOne sign-in" className="min-h-screen bg-[#f4f5f6] p-3 sm:p-5 lg:grid lg:grid-cols-[minmax(380px,0.92fr)_1.08fr] lg:gap-5">
@@ -19,7 +26,12 @@ export default function LoginLoading() {
         <div className="w-full max-w-[470px] animate-pulse">
           <div className="mb-9 flex items-center justify-between border-b border-[#e4e7e9] pb-5"><div className="h-3 w-28 rounded-full bg-[#dfe3e5]" /><div className="h-3 w-14 rounded-full bg-[#e7eaec]" /></div>
           <div className="mb-8 space-y-3"><div className="h-10 w-56 rounded-lg bg-[#dfe3e5]" /><div className="h-3 w-72 rounded-full bg-[#e7eaec]" /></div>
-          <div className="space-y-6"><div className="space-y-2.5"><div className="h-3 w-24 rounded-full bg-[#e7eaec]" /><div className="h-[54px] rounded-[16px_6px_16px_6px] border border-[#e4e7e9] bg-white" /></div><div className="space-y-2.5"><div className="h-3 w-20 rounded-full bg-[#e7eaec]" /><div className="h-[54px] rounded-[16px_6px_16px_6px] border border-[#e4e7e9] bg-white" /></div><div className="h-[54px] rounded-[18px_6px_18px_6px] bg-[#dfe3e5]" /><div className="h-16 border-l-[3px] border-[#e9ecee] bg-[#f3f5f6]" /></div>
+          <div className="space-y-6">
+            <div className="space-y-2.5"><div className="h-3 w-24 rounded-full bg-[#e7eaec]" /><div className={`${FIELD_HEIGHT} ${FIELD_RADIUS} border border-[#e4e7e9] bg-white`} /></div>
+            <div className="space-y-2.5"><div className="h-3 w-20 rounded-full bg-[#e7eaec]" /><div className={`${FIELD_HEIGHT} ${FIELD_RADIUS} border border-[#e4e7e9] bg-white`} /></div>
+            <div className={`${FIELD_HEIGHT} ${BUTTON_RADIUS} bg-[#dfe3e5]`} />
+            <div className="h-16 border-l-[3px] border-[#e9ecee] bg-[#f3f5f6]" />
+          </div>
         </div>
       </section>
     </main>

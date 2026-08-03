@@ -117,6 +117,28 @@ export function validateEnv(raw: RawEnv): RawEnv {
     problems.push('AUTH_MODE=local-dev is not allowed in production');
   }
 
+  // Brute-force protection has two independent layers, and a misconfigured
+  // value silently disables one of them — so both are checked at boot.
+  const positiveIntegers: Array<[string, unknown, number]> = [
+    ['LOGIN_RATE_LIMIT_ATTEMPTS', raw.LOGIN_RATE_LIMIT_ATTEMPTS, 10],
+    [
+      'LOGIN_RATE_LIMIT_WINDOW_SECONDS',
+      raw.LOGIN_RATE_LIMIT_WINDOW_SECONDS,
+      60,
+    ],
+    ['LOGIN_MAX_FAILED_ATTEMPTS', raw.LOGIN_MAX_FAILED_ATTEMPTS, 5],
+    ['LOGIN_LOCKOUT_MINUTES', raw.LOGIN_LOCKOUT_MINUTES, 15],
+  ];
+
+  for (const [name, value, fallback] of positiveIntegers) {
+    const parsed = Number(asString(value) ?? fallback);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      problems.push(
+        `${name} must be a positive integer, got "${asString(value) ?? ''}"`,
+      );
+    }
+  }
+
   if (problems.length > 0) {
     throw new Error(
       `Invalid environment configuration:\n${problems.map((p) => `  - ${p}`).join('\n')}\n` +
