@@ -19,7 +19,22 @@ export class PrismaService
 
   constructor(config: ConfigService<AppConfig, true>) {
     const databaseUrl = config.get('databaseUrl', { infer: true });
-    const adapter = new PrismaPg({ connectionString: databaseUrl });
+
+    const adapter = new PrismaPg({
+      connectionString: databaseUrl,
+      // Serverless Postgres (Neon, and its PgBouncer pooler) closes idle
+      // connections on its own schedule. Left at the driver defaults, the pool
+      // eventually hands out a socket the server has already dropped and the
+      // request fails with "Connection terminated unexpectedly" — intermittently,
+      // and only under real traffic patterns.
+      //
+      // Recycling connections before the server does, and keeping them alive
+      // while in the pool, removes that class of failure.
+      idleTimeoutMillis: 10_000,
+      connectionTimeoutMillis: 15_000,
+      keepAlive: true,
+      max: 10,
+    });
 
     super({ adapter });
     this.isTestEnvironment = config.get('nodeEnv', { infer: true }) === 'test';

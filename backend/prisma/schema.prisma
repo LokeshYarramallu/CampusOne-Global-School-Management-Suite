@@ -23,6 +23,7 @@ model Tenant {
   enrollments         StudentEnrollment[]
   teachingAssignments TeachingAssignment[]
   changeRequests      ProfileChangeRequest[]
+  calendarEvents      CalendarEvent[]
 
   @@map("tenant")
 }
@@ -74,6 +75,7 @@ model UserIdentity {
   staffProfiles    StaffProfile[]
   enrollments      StudentEnrollment[]
   changeRequests   ProfileChangeRequest[]
+  calendarEvents   CalendarEvent[]
 
   @@map("user_identity")
 }
@@ -82,17 +84,22 @@ model UserIdentity {
 /// children at three schools is one person with one name (PRD §5.3).
 /// Deliberately carries no tenant_id.
 model UserProfile {
-  id             String       @id @default(uuid()) @db.Uuid
-  userIdentityId String       @unique @map("user_identity_id") @db.Uuid
-  user           UserIdentity @relation(fields: [userIdentityId], references: [id], onDelete: Cascade)
-  givenName      String       @map("given_name")
-  familyName     String       @map("family_name")
-  displayName    String?      @map("display_name")
+  id              String       @id @default(uuid()) @db.Uuid
+  userIdentityId  String       @unique @map("user_identity_id") @db.Uuid
+  user            UserIdentity @relation(fields: [userIdentityId], references: [id], onDelete: Cascade)
+  givenName       String       @map("given_name")
+  familyName      String       @map("family_name")
+  displayName     String?      @map("display_name")
+  /// The person's own postal address. Identity-level: it follows them, and a
+  /// parent at three schools has one address, not three.
+  addressLine     String?      @map("address_line")
+  addressCity     String?      @map("address_city")
+  addressPostcode String?      @map("address_postcode")
   /// Reserved. Always null until file storage exists (research R2); present so
   /// photo upload needs no migration.
-  photoReference String?      @map("photo_reference")
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
+  photoReference  String?      @map("photo_reference")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
 
   @@map("user_profile")
 }
@@ -200,6 +207,58 @@ model ProfileChangeRequest {
   @@index([tenantId, status])
   @@index([tenantId, userIdentityId])
   @@map("profile_change_request")
+}
+
+/// Tenant-owned. A calendar event, visible by membership, not by rank.
+///
+/// `scope` is the visibility hierarchy: a SCHOOL event is seen by everyone in
+/// the tenant; a CLASS event only by that class's members (enrolled students,
+/// assigned teachers) plus the creator; a PERSONAL event only by its creator.
+/// A school admin does NOT see a teacher's class event — membership, not
+/// oversight (see the calendar module's visibility.ts).
+///
+/// "Class" is the `(class_label, section_label)` pair, as everywhere else in
+/// CampusOne — there is no classroom entity yet.
+model CalendarEvent {
+  id            String            @id @default(uuid()) @db.Uuid
+  tenantId      String            @map("tenant_id") @db.Uuid
+  tenant        Tenant            @relation(fields: [tenantId], references: [id])
+  scope         CalendarScope
+  /// Set only when scope = CLASS.
+  classLabel    String?           @map("class_label")
+  sectionLabel  String?           @map("section_label")
+  /// Creator: the visibility key for PERSONAL, the edit key for every scope.
+  ownerUserId   String            @map("owner_user_id") @db.Uuid
+  owner         UserIdentity      @relation(fields: [ownerUserId], references: [id])
+  createdByRole String            @map("created_by_role")
+  type          CalendarEventType @default(NOTICE)
+  title         String
+  description   String?
+  eventDate     DateTime          @map("event_date") @db.Date
+  startTime     String?           @map("start_time")
+  endTime       String?           @map("end_time")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  @@index([tenantId, eventDate])
+  @@index([tenantId, scope, classLabel, sectionLabel])
+  @@index([tenantId, ownerUserId])
+  @@map("calendar_event")
+}
+
+enum CalendarScope {
+  SCHOOL
+  CLASS
+  PERSONAL
+}
+
+enum CalendarEventType {
+  ACADEMIC
+  CULTURAL
+  EXAM
+  HOLIDAY
+  MEETING
+  NOTICE
 }
 
 model AuthSession {

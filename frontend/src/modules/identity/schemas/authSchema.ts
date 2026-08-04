@@ -1,15 +1,43 @@
-import type { AuthSession, AuthUser } from '../types/auth';
+﻿import type { AuthRoleKey, AuthSession, AuthUser } from '../types/auth';
+
+const AUTH_ROLE_KEYS: AuthRoleKey[] = [
+  'PLATFORM_SUPER_ADMIN',
+  'SCHOOL_ADMIN_OFFICE',
+  'PRINCIPAL',
+  'ACCOUNTANT',
+  'TEACHER',
+  'STUDENT',
+  'PARENT_GUARDIAN',
+];
+
+const ROLE_DISPLAY_NAMES: Record<AuthRoleKey, string> = {
+  PLATFORM_SUPER_ADMIN: 'Platform Super Admin',
+  SCHOOL_ADMIN_OFFICE: 'School Admin Office',
+  PRINCIPAL: 'Principal',
+  ACCOUNTANT: 'Accountant',
+  TEACHER: 'Teacher',
+  STUDENT: 'Student',
+  PARENT_GUARDIAN: 'Parent / Guardian',
+};
 
 function isAuthUser(value: unknown): value is AuthUser {
   if (typeof value !== 'object' || value === null) return false;
   const user = value as Record<string, unknown>;
-  return (
-    typeof user.userId === 'string' &&
-    typeof user.email === 'string' &&
-    user.roleKey === 'PLATFORM_SUPER_ADMIN' &&
-    user.roleName === 'Platform Super Admin' &&
-    (user.authMode === 'local-dev' || user.authMode === 'keycloak')
-  );
+
+  if (
+    typeof user.userId !== 'string' ||
+    typeof user.email !== 'string' ||
+    typeof user.roleKey !== 'string' ||
+    !AUTH_ROLE_KEYS.includes(user.roleKey as AuthRoleKey) ||
+    typeof user.roleName !== 'string' ||
+    user.roleName !== ROLE_DISPLAY_NAMES[user.roleKey as AuthRoleKey] ||
+    (user.tenantId !== undefined && typeof user.tenantId !== 'string') ||
+    (user.authMode !== 'local-dev' && user.authMode !== 'keycloak')
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 export function parseAuthSession(value: unknown): AuthSession {

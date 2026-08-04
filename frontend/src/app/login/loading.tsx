@@ -7,7 +7,7 @@ import { BUTTON_RADIUS, FIELD_HEIGHT, FIELD_RADIUS } from '@/modules/identity';
  */
 export default function LoginLoading() {
   return (
-    <main aria-busy="true" aria-label="Loading CampusOne sign-in" className="min-h-screen bg-[#f4f5f6] p-3 sm:p-5 lg:grid lg:grid-cols-[minmax(380px,0.92fr)_1.08fr] lg:gap-5">
+    <main aria-busy="true" aria-label="Loading CampusOne sign-in" className="min-h-screen bg-[#f4f5f6] p-3 sm:p-5 lg:grid lg:h-screen lg:grid-cols-[minmax(380px,0.92fr)_1.08fr] lg:gap-5 lg:overflow-hidden">
       <section className="relative min-h-[218px] overflow-hidden rounded-[40px_12px_40px_12px] bg-[#f85001] px-6 py-6 sm:px-9 sm:py-8 lg:min-h-[calc(100vh-40px)] lg:p-11 xl:p-14">
         <div className="absolute -right-28 -top-24 h-[430px] w-[430px] rounded-full border border-[#111214]/10" />
         <div className="absolute -bottom-48 -left-28 h-[520px] w-[520px] rounded-full bg-[#de4700]" />
@@ -22,11 +22,11 @@ export default function LoginLoading() {
         </div>
       </section>
 
-      <section className="flex min-h-[calc(100vh-218px)] items-center justify-center rounded-[12px_40px_12px_40px] bg-[#f9fafb] px-5 py-10 sm:px-10 lg:min-h-[calc(100vh-40px)] lg:px-12 xl:px-20">
-        <div className="w-full max-w-[470px] animate-pulse">
-          <div className="mb-9 flex items-center justify-between border-b border-[#e4e7e9] pb-5"><div className="h-3 w-28 rounded-full bg-[#dfe3e5]" /><div className="h-3 w-14 rounded-full bg-[#e7eaec]" /></div>
-          <div className="mb-8 space-y-3"><div className="h-10 w-56 rounded-lg bg-[#dfe3e5]" /><div className="h-3 w-72 rounded-full bg-[#e7eaec]" /></div>
-          <div className="space-y-6">
+      <section className="flex min-h-[calc(100vh-218px)] items-center justify-center overflow-y-auto rounded-[12px_40px_12px_40px] bg-[#f9fafb] px-5 py-8 sm:px-10 lg:h-[calc(100vh-40px)] lg:min-h-0 lg:px-12 xl:px-20">
+        <div className="campusone-compact w-full max-w-[470px] animate-pulse">
+          <div className="mb-7 flex items-center justify-between border-b border-[#e4e7e9] pb-5"><div className="h-3 w-28 rounded-full bg-[#dfe3e5]" /><div className="h-3 w-14 rounded-full bg-[#e7eaec]" /></div>
+          <div className="mb-6 space-y-3"><div className="h-10 w-56 rounded-lg bg-[#dfe3e5]" /><div className="h-3 w-72 rounded-full bg-[#e7eaec]" /></div>
+          <div className="space-y-5">
             <div className="space-y-2.5"><div className="h-3 w-24 rounded-full bg-[#e7eaec]" /><div className={`${FIELD_HEIGHT} ${FIELD_RADIUS} border border-[#e4e7e9] bg-white`} /></div>
             <div className="space-y-2.5"><div className="h-3 w-20 rounded-full bg-[#e7eaec]" /><div className={`${FIELD_HEIGHT} ${FIELD_RADIUS} border border-[#e4e7e9] bg-white`} /></div>
             <div className={`${FIELD_HEIGHT} ${BUTTON_RADIUS} bg-[#dfe3e5]`} />

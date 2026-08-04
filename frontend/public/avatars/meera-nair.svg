@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="200" height="200" role="img">
+<defs><clipPath id="c"><circle cx="50" cy="50" r="50"/></clipPath>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f6f7"/><stop offset="1" stop-color="#e3e8ea"/></linearGradient></defs>
+<g clip-path="url(#c)">
+<rect width="100" height="100" fill="url(#bg)"/>
+<path d="M50 62c16 0 29 12 31 28v10H19V90c2-16 15-28 31-28z" fill="#1f6f5c"/>
+<path d="M42 54h16v14a8 8 0 0 1-16 0z" fill="#e5b491"/>
+<ellipse cx="50" cy="45" rx="17" ry="20" fill="#e5b491"/>
+<path d="M38 78c-9 0-14-9-14-22 0-22 12-34 26-34s26 12 26 34c0 13-5 22-14 22V52H38z" fill="#241a14"/><path d="M24 56c0 26 4 40 10 46h6V52H24z" fill="#241a14"/><path d="M76 56c0 26-4 40-10 46h-6V52h16z" fill="#241a14"/>
+<circle cx="43.5" cy="45" r="1.8" fill="#2b2b2b"/><circle cx="56.5" cy="45" r="1.8" fill="#2b2b2b"/>
+<path d="M45.5 53q4.5 3.5 9 0" stroke="#b9755c" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+</g></svg>

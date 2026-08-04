@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+﻿import { describe, expect, it } from 'vitest';
 import { parseAuthSession, parseAuthUser } from '../schemas/authSchema';
 
 const validUser = {
@@ -17,7 +17,7 @@ describe('parseAuthUser', () => {
   it.each([
     ['a missing userId', { ...validUser, userId: undefined }],
     ['a non-string email', { ...validUser, email: 42 }],
-    ['an unknown role key', { ...validUser, roleKey: 'TEACHER' }],
+    ['an unknown role key', { ...validUser, roleKey: 'NOT_A_ROLE' }],
     ['an unknown auth mode', { ...validUser, authMode: 'saml' }],
     ['a null body', null],
     ['a primitive body', 'ok'],
@@ -60,3 +60,4 @@ describe('parseAuthSession', () => {
     ).toThrow(/invalid authentication response/i);
   });
 });
+

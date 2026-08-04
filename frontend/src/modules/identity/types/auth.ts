@@ -1,8 +1,18 @@
+export type AuthRoleKey =
+  | 'PLATFORM_SUPER_ADMIN'
+  | 'SCHOOL_ADMIN_OFFICE'
+  | 'PRINCIPAL'
+  | 'ACCOUNTANT'
+  | 'TEACHER'
+  | 'STUDENT'
+  | 'PARENT_GUARDIAN';
+
 export interface AuthUser {
   userId: string;
   email: string;
-  roleKey: 'PLATFORM_SUPER_ADMIN';
-  roleName: 'Platform Super Admin';
+  roleKey: AuthRoleKey;
+  roleName: string;
+  tenantId?: string;
   authMode: 'local-dev' | 'keycloak';
 }
 

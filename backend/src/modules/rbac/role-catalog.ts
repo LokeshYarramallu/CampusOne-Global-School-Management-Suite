@@ -19,6 +19,9 @@ export const INITIAL_ROLE_DEFINITIONS = [
       ['fees', 'configuration', 'manage'],
       ['fees', 'invoices', 'manage'],
       ['communication', 'school', 'manage'],
+      ['calendar', 'view', 'read'],
+      ['calendar', 'school', 'manage'],
+      ['calendar', 'self', 'manage'],
     ],
   },
   {
@@ -31,6 +34,9 @@ export const INITIAL_ROLE_DEFINITIONS = [
       ['attendance', 'school', 'read'],
       ['fees', 'school', 'read'],
       ['identity', 'users', 'read'],
+      ['calendar', 'view', 'read'],
+      ['calendar', 'school', 'manage'],
+      ['calendar', 'self', 'manage'],
     ],
   },
   {
@@ -42,6 +48,7 @@ export const INITIAL_ROLE_DEFINITIONS = [
       ['fees', 'reconciliation', 'manage'],
       ['fees', 'refunds', 'manage'],
       ['finance', 'reports', 'read'],
+      ['calendar', 'view', 'read'],
     ],
   },
   {
@@ -53,6 +60,9 @@ export const INITIAL_ROLE_DEFINITIONS = [
       ['grades', 'class', 'manage'],
       ['students', 'assigned', 'read'],
       ['communication', 'class', 'create'],
+      ['calendar', 'view', 'read'],
+      ['calendar', 'assigned', 'manage'],
+      ['calendar', 'self', 'manage'],
     ],
   },
   {
@@ -65,6 +75,8 @@ export const INITIAL_ROLE_DEFINITIONS = [
       ['assignments', 'submission', 'create'],
       ['grades', 'self', 'read'],
       ['leave', 'self', 'request'],
+      ['calendar', 'view', 'read'],
+      ['calendar', 'self', 'manage'],
     ],
   },
   {
@@ -78,6 +90,7 @@ export const INITIAL_ROLE_DEFINITIONS = [
       ['fees', 'children', 'read'],
       ['fees', 'payments', 'create'],
       ['communication', 'teachers', 'create'],
+      ['calendar', 'view', 'read'],
     ],
   },
 ] as const;

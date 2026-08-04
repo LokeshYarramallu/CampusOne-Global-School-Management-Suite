@@ -132,24 +132,24 @@ export function LoginForm() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f4f5f6] p-3 text-[#202226] sm:p-5 lg:grid lg:grid-cols-[minmax(380px,0.92fr)_1.08fr] lg:gap-5">
+    <main className="min-h-screen bg-[#f4f5f6] p-3 text-[#202226] sm:p-5 lg:grid lg:h-screen lg:grid-cols-[minmax(380px,0.92fr)_1.08fr] lg:gap-5 lg:overflow-hidden">
       <LoginHero />
 
-      <section className="campusone-enter campusone-enter-delay flex min-h-[calc(100vh-218px)] items-center justify-center rounded-[12px_40px_12px_40px] bg-[#f9fafb] px-5 py-10 sm:px-10 lg:min-h-[calc(100vh-40px)] lg:px-12 xl:px-20">
-        <div className="w-full max-w-[470px]">
-          <div className="mb-9 flex items-center justify-between border-b border-[#e4e7e9] pb-5">
+      <section className="campusone-enter campusone-enter-delay flex min-h-[calc(100vh-218px)] items-center justify-center overflow-y-auto rounded-[12px_40px_12px_40px] bg-[#f9fafb] px-5 py-8 sm:px-10 lg:h-[calc(100vh-40px)] lg:min-h-0 lg:px-12 xl:px-20">
+        <div className="campusone-compact w-full max-w-[470px]">
+          <div className="mb-7 flex items-center justify-between border-b border-[#e4e7e9] pb-4">
             <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-[#5f6469]">CampusOne access</p>
             <span className="flex items-center gap-2 text-[0.7rem] font-medium text-[#5f6469]"><span className="h-1.5 w-1.5 rounded-full bg-[#3f7a55]" /> Online</span>
           </div>
 
-          <div className="mb-8">
+          <div className="mb-6">
             {/* The document's only h1, and present at every breakpoint — the
                 hero headline it replaces is hidden below lg. */}
             <h1 className="text-[2.1rem] font-semibold leading-tight tracking-[-0.055em] text-[#202226]">Welcome back</h1>
             <p className="mt-3 max-w-[360px] text-sm leading-6 text-[#4a4f54]">Sign in to continue to your school operations workspace.</p>
           </div>
 
-          <form onSubmit={handleSubmit} noValidate aria-busy={status === 'submitting'} className="space-y-6">
+          <form onSubmit={handleSubmit} noValidate aria-busy={status === 'submitting'} className="space-y-5">
             <TextField
               id="email"
               type="email"
@@ -225,7 +225,7 @@ export function LoginForm() {
             ) : null}
           </form>
 
-          <p className="mt-8 border-t border-[#e4e7e9] pt-5 text-[0.7rem] leading-5 text-[#5f6469]">Access is protected by role-aware authentication and secure session controls.</p>
+          <p className="mt-6 border-t border-[#e4e7e9] pt-4 text-[0.7rem] leading-5 text-[#5f6469]">Access is protected by role-aware authentication and secure session controls.</p>
         </div>
       </section>
     </main>

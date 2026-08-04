@@ -20,6 +20,21 @@ input {
   font: inherit;
 }
 
+/**
+ * Scales a block and everything inside it — text, padding, borders, and the
+ * fixed pixel sizes alike — to 64% (0.8 of the earlier 0.8).
+ *
+ * `zoom` rather than `transform: scale()` on purpose: zoom shrinks the layout
+ * box too, so surrounding flow closes up around it. A transform would leave a
+ * full-size gap where the element used to be and require compensating widths.
+ *
+ * Applied to content blocks only, never to the full-height columns — those are
+ * sized in viewport units, and zooming them would leave a strip of empty page.
+ */
+.campusone-compact {
+  zoom: 0.64;
+}
+
 @keyframes campusone-enter {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }

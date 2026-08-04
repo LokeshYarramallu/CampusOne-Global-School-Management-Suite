@@ -59,7 +59,7 @@ export function LoginHero() {
         C
       </div>
 
-      <div className="relative z-10 flex items-center gap-3">
+      <div className="campusone-compact relative z-10 flex items-center gap-3">
         <div className="grid h-11 w-11 place-items-center rounded-[16px_5px_16px_5px] bg-[#111214] text-base font-bold text-white shadow-[0_8px_18px_rgba(17,18,20,0.14)]">
           C
         </div>
@@ -68,7 +68,7 @@ export function LoginHero() {
         </span>
       </div>
 
-      <div className="relative z-10 hidden max-w-[430px] pb-10 lg:block">
+      <div className="campusone-compact relative z-10 hidden max-w-[430px] pb-10 lg:block">
         <p className="mb-5 text-[0.7rem] font-bold uppercase tracking-[0.25em] text-[#111214]">
           Academic operations workspace
         </p>
@@ -81,7 +81,7 @@ export function LoginHero() {
         </p>
       </div>
 
-      <div className="relative z-10 flex items-center justify-between gap-4 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#111214]/90">
+      <div className="campusone-compact relative z-10 flex items-center justify-between gap-4 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#111214]/90">
         <span>CampusOne / Access desk</span>
         <span className="flex items-center gap-2 normal-case tracking-normal">
           <span className="h-1.5 w-1.5 rounded-full bg-[#111214]" /> Secure

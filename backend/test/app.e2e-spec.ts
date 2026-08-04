@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+﻿import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
@@ -109,6 +109,42 @@ describe('API (e2e)', () => {
         .expect(401)
         .expect(({ body }: { body: unknown }) => {
           expect((body as ApiErrorBody).error.code).toBe('UNAUTHENTICATED');
+        });
+    });
+  });
+  describe('Calendar endpoints', () => {});
+
+  describe('Calendar endpoints', () => {
+    it('rejects unauthenticated requests', async () => {
+      await request(app.getHttpServer())
+        .get('/api/v1/calendar')
+        .expect(401)
+        .expect(({ body }: { body: unknown }) => {
+          expect((body as ApiErrorBody).error.code).toBe('UNAUTHENTICATED');
+        });
+    });
+
+    it('rejects the platform admin because the calendar permission is missing', async () => {
+      const loginResponse = await request(app.getHttpServer())
+        .post('/api/v1/auth/login')
+        .send({
+          email: 'platform-admin@campusone.local',
+          password: 'CampusOneAdmin!2026',
+        })
+        .expect(201);
+
+      const cookies = loginResponse.headers['set-cookie'] as unknown as
+        string[] | undefined;
+      if (!cookies || cookies.length === 0) {
+        throw new Error('Platform admin login did not set a cookie');
+      }
+
+      await request(app.getHttpServer())
+        .get('/api/v1/calendar')
+        .set('Cookie', cookies[0])
+        .expect(403)
+        .expect(({ body }: { body: unknown }) => {
+          expect((body as ApiErrorBody).error.code).toBe('FORBIDDEN');
         });
     });
   });

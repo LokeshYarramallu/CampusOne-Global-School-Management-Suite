@@ -98,6 +98,8 @@ async function upsertPerson(
     givenName: string;
     familyName: string;
     phone?: string;
+    /** Path under frontend/public — illustrated portraits, not photographs. */
+    photo?: string;
     passwordHash: string;
   },
 ): Promise<string> {
@@ -114,15 +116,20 @@ async function upsertPerson(
   );
   const userId = identity.rows[0].id;
 
+  const photo =
+    person.photo ??
+    `/avatars/${person.givenName}-${person.familyName}`.toLowerCase();
+
   await client.query(
     `INSERT INTO "user_profile"
-       ("id", "user_identity_id", "given_name", "family_name", "created_at", "updated_at")
-     VALUES (gen_random_uuid(), $1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+       ("id", "user_identity_id", "given_name", "family_name", "photo_reference", "created_at", "updated_at")
+     VALUES (gen_random_uuid(), $1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
      ON CONFLICT ("user_identity_id") DO UPDATE SET
        "given_name" = EXCLUDED."given_name",
        "family_name" = EXCLUDED."family_name",
+       "photo_reference" = EXCLUDED."photo_reference",
        "updated_at" = CURRENT_TIMESTAMP`,
-    [userId, person.givenName, person.familyName],
+    [userId, person.givenName, person.familyName, `${photo}.svg`],
   );
 
   await client.query(
@@ -257,6 +264,8 @@ async function seedSchool(
   ];
 
   let teacherStaffId = '';
+  let teacherUserId = '';
+  let adminUserId = '';
   for (const member of staffPlan) {
     const userId = await upsertPerson(client, {
       email: member.email,
@@ -279,7 +288,11 @@ async function seedSchool(
       department: member.department,
       joinedOn: '2024-06-01',
     });
-    if (member.roleKey === 'TEACHER') teacherStaffId = staffId;
+    if (member.roleKey === 'TEACHER') {
+      teacherStaffId = staffId;
+      teacherUserId = userId;
+    }
+    if (member.roleKey === 'SCHOOL_ADMIN_OFFICE') adminUserId = userId;
   }
 
   // The teaching assignment is the Teacher role's scope, not decoration.
@@ -338,6 +351,88 @@ async function seedSchool(
     ],
   );
 
+  // --- Calendar demo events ---------------------------------------------
+  // One of each scope so every role sees something, and the membership rule
+  // is demonstrable: the CLASS event is owned by the teacher and targets the
+  // student's class, so both see it but the admin does not.
+  const studentClass = school.slug === 'greenwood'
+    ? { classLabel: '8', sectionLabel: 'B' }
+    : { classLabel: '5', sectionLabel: 'A' };
+  const soon = (days: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
+  };
+
+  const events: Array<{
+    scope: 'SCHOOL' | 'CLASS' | 'PERSONAL';
+    classLabel: string | null;
+    sectionLabel: string | null;
+    ownerUserId: string;
+    role: string;
+    type: string;
+    title: string;
+    description: string | null;
+    eventDate: string;
+    startTime: string | null;
+    endTime: string | null;
+  }> = [
+    {
+      scope: 'SCHOOL', classLabel: null, sectionLabel: null,
+      ownerUserId: adminUserId, role: 'SCHOOL_ADMIN_OFFICE', type: 'HOLIDAY',
+      title: 'Founders Day holiday', description: 'The school is closed for Founders Day.',
+      eventDate: soon(6), startTime: null, endTime: null,
+    },
+    {
+      scope: 'SCHOOL', classLabel: null, sectionLabel: null,
+      ownerUserId: adminUserId, role: 'SCHOOL_ADMIN_OFFICE', type: 'MEETING',
+      title: 'Parent–teacher meeting', description: 'Term-one progress discussions in the main hall.',
+      eventDate: soon(9), startTime: '10:00', endTime: '13:00',
+    },
+    {
+      scope: 'CLASS', classLabel: studentClass.classLabel, sectionLabel: studentClass.sectionLabel,
+      ownerUserId: teacherUserId, role: 'TEACHER', type: 'EXAM',
+      title: `Mathematics unit test — ${studentClass.classLabel}-${studentClass.sectionLabel}`,
+      description: 'Chapters 3 and 4. Bring your own instruments.',
+      eventDate: soon(3), startTime: '09:00', endTime: '10:00',
+    },
+    {
+      scope: 'PERSONAL', classLabel: null, sectionLabel: null,
+      ownerUserId: teacherUserId, role: 'TEACHER', type: 'NOTICE',
+      title: 'Prepare test papers', description: null,
+      eventDate: soon(2), startTime: '18:00', endTime: null,
+    },
+    {
+      scope: 'PERSONAL', classLabel: null, sectionLabel: null,
+      ownerUserId: childUserId, role: 'STUDENT', type: 'ACADEMIC',
+      title: 'Revise algebra', description: 'Focus on quadratic equations.',
+      eventDate: soon(1), startTime: '17:00', endTime: '18:30',
+    },
+  ];
+
+  // Idempotent re-seed: calendar_event has no natural unique key, so clear the
+  // tenant's events before re-inserting rather than accumulating duplicates.
+  await client.query(`DELETE FROM "calendar_event" WHERE "tenant_id" = $1`, [
+    tenantId,
+  ]);
+
+  for (const e of events) {
+    await client.query(
+      `INSERT INTO "calendar_event"
+         ("id", "tenant_id", "scope", "class_label", "section_label",
+          "owner_user_id", "created_by_role", "type", "title", "description",
+          "event_date", "start_time", "end_time", "created_at", "updated_at")
+       VALUES (gen_random_uuid(), $1, $2::"CalendarScope", $3, $4, $5, $6,
+               $7::"CalendarEventType", $8, $9, $10, $11, $12,
+               CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+       ON CONFLICT DO NOTHING`,
+      [
+        tenantId, e.scope, e.classLabel, e.sectionLabel, e.ownerUserId,
+        e.role, e.type, e.title, e.description, e.eventDate, e.startTime, e.endTime,
+      ],
+    );
+  }
+
   return { tenantId, childUserId };
 }
 
@@ -357,6 +452,7 @@ async function main(): Promise<void> {
       email: platformAdminEmail,
       givenName: 'Platform',
       familyName: 'Operator',
+      photo: '/avatars/platform-operator',
       passwordHash,
     });
 

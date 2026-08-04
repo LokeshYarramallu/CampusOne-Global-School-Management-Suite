@@ -7,6 +7,7 @@ import type { AppConfig } from './core/config/configuration';
 import { RateLimitGuard, skipUnlessStrict } from './core/http/rate-limit.guard';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { HealthModule } from './modules/health/health.module';
+import { CalendarModule } from './modules/calendar/calendar.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { RbacModule } from './modules/rbac/rbac.module';
@@ -47,6 +48,7 @@ import { TenantModule } from './modules/tenant/tenant.module';
     // Feature modules
     HealthModule,
     ProfileModule,
+    CalendarModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: RateLimitGuard }],
 })

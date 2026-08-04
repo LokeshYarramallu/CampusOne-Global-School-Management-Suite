@@ -30,6 +30,22 @@ export type TenantScopedClient = Omit<
   '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'
 >;
 
+/**
+ * Prisma's defaults (maxWait 2s, timeout 5s) assume a database on the same
+ * network. Against a managed Postgres a single round trip can cost most of
+ * that budget on its own, so a transaction that merely waits its turn behind
+ * other queries fails with "Unable to start a transaction in the given time" —
+ * an infrastructure timeout surfacing as a 500 the user cannot act on.
+ *
+ * These are ceilings, not targets: a healthy request finishes far inside them.
+ */
+const TRANSACTION_OPTIONS = {
+  /** How long to wait for a connection before giving up. */
+  maxWait: 15_000,
+  /** How long the transaction itself may run once started. */
+  timeout: 20_000,
+} as const;
+
 @Injectable()
 export class TenantScopedPrisma {
   private readonly logger = new Logger(TenantScopedPrisma.name);
@@ -64,7 +80,7 @@ export class TenantScopedPrisma {
       // concatenated into SQL, even though it originates server-side.
       await tx.$executeRaw`SELECT set_config('app.tenant_id', ${context.tenantId}, true)`;
       return work(tx as unknown as TenantScopedClient);
-    });
+    }, TRANSACTION_OPTIONS);
   }
 
   /**
