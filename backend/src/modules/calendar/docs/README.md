@@ -1,4 +1,4 @@
-# Calendar module
+﻿# Calendar module
 
 The CampusOne calendar is a tenant-scoped, role-aware event board. It shows
 every school member the events that matter to them and lets them create events
@@ -88,4 +88,7 @@ creator-only edits, and class-assignment validation.
 - Parents cannot create personal events in v1; they have read-only access to
   school and their children's class events.
 - No recurring events, invitations, or room/resource booking.
+- The frontend event card styling is intentionally warm and tactile (surface color,
+  radial-gradient wash, warm border, scope icon, frosted-glass date block) to
+  avoid a flat, generated-palette look.
 - No ICS export or external calendar sync.

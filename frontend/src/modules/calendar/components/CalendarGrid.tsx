@@ -24,7 +24,7 @@ export function CalendarGrid({
   onNextMonth,
 }: CalendarGridProps) {
   return (
-    <section className='rounded-[28px] border border-[#e6ebf2] bg-white p-5 shadow-[0_16px_44px_rgba(15,23,42,0.06)] sm:p-6'>
+    <section className='rounded-[28px] border border-[#e8ebf1] bg-white/90 p-5 shadow-[0_18px_46px_rgba(15,23,42,0.04)] backdrop-blur-sm sm:p-6'>
       <div className='mb-5 flex items-center justify-between'>
         <div>
           <p className='text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#a6a9ae]'>Calendar</p>
@@ -34,7 +34,7 @@ export function CalendarGrid({
           <button
             type='button'
             onClick={onPreviousMonth}
-            className='rounded-full bg-[#f7f7f8] p-2 text-[#5c5f64] transition-colors hover:bg-[#eceef0] hover:text-[#202226]'
+            className='rounded-full bg-white p-2 text-[#4d5055] shadow-sm ring-1 ring-[#eef0f2] transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-[#f4f5f6] hover:scale-110 active:scale-95 hover:text-[#202226] hover:shadow-md'
             aria-label='Previous month'
           >
             <ChevronLeft className='h-4 w-4' />
@@ -42,7 +42,7 @@ export function CalendarGrid({
           <button
             type='button'
             onClick={onNextMonth}
-            className='rounded-full bg-[#f7f7f8] p-2 text-[#5c5f64] transition-colors hover:bg-[#eceef0] hover:text-[#202226]'
+            className='rounded-full bg-white p-2 text-[#4d5055] shadow-sm ring-1 ring-[#eef0f2] transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-[#f4f5f6] hover:scale-110 active:scale-95 hover:text-[#202226] hover:shadow-md'
             aria-label='Next month'
           >
             <ChevronRight className='h-4 w-4' />
@@ -69,19 +69,19 @@ export function CalendarGrid({
           [UI.Chevron]: 'hidden',
           [UI.MonthGrid]: 'w-full border-collapse',
           [UI.Weekdays]: 'flex',
-          [UI.Weekday]: 'w-full rounded-md text-[0.68rem] font-medium uppercase tracking-[0.08em] text-[#b8babf]',
+          [UI.Weekday]: 'w-full rounded-lg text-[0.68rem] font-medium uppercase tracking-[0.08em] text-[#b8babf]',
           [UI.Week]: 'mt-1 flex w-full',
           [UI.Day]: 'relative h-10 w-full p-0 text-center sm:h-12',
           [UI.DayButton]: cn(
-            'h-10 w-full rounded-[12px] p-0 text-[0.82rem] font-medium text-[#5c5f64] transition-all duration-200 ease-out',
-            'hover:bg-[#f7f7f8] sm:h-12',
+            'h-10 w-full rounded-[14px] p-0 text-[0.8rem] font-medium text-[#5c5f64] transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]',
+            'hover:bg-[#f4f5f6] hover:scale-[1.03] active:scale-95 sm:h-12',
             'aria-selected:opacity-100',
           ),
           [SelectionState.selected]: 'bg-[#111214] text-white shadow-[0_8px_18px_rgba(58,60,64,0.18)]',
-          [DayFlag.today]: 'bg-[#fff4ec] text-[#f97316] ring-1 ring-[#ffe0c8]',
+          [DayFlag.today]: 'bg-[#fff4ec] text-[#f97316] ring-1 ring-[#ffd6b8]',
           [DayFlag.outside]: 'text-[#d6d7da] opacity-100',
           [DayFlag.disabled]: 'text-[#e0e1e4]',
-          [SelectionState.range_middle]: 'bg-[#f7f7f8] text-[#3a3c40]',
+          [SelectionState.range_middle]: 'bg-[#f4f5f6] text-[#3a3c40]',
           [DayFlag.hidden]: 'invisible',
         }}
         components={{
@@ -101,7 +101,7 @@ export function CalendarGrid({
               >
                 <span>{date.getDate()}</span>
                 {dayEvents.length > 0 && (
-                  <span className='h-1 w-1 rounded-full bg-[#f97316]' aria-hidden='true' />
+                  <span className='h-1.5 w-1.5 rounded-full bg-[#f97316] ring-2 ring-white shadow-sm' aria-hidden='true' />
                 )}
               </button>
             );

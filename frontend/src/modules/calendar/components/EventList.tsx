@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { format, isSameDay, isToday, parseISO } from 'date-fns';
 import { motion } from 'motion/react';
@@ -34,7 +34,7 @@ export function EventList({
   const dayEvents = events.filter((e) => isSameDay(parseISO(e.eventDate), selectedDate));
 
   return (
-    <section className='flex h-full min-h-0 flex-col rounded-[28px] border border-[#e6ebf2] bg-white p-5 shadow-[0_16px_44px_rgba(15,23,42,0.06)] sm:p-6'>
+    <section className='flex h-full min-h-0 flex-col rounded-[28px] border border-[#e8ebf1] bg-white/90 p-5 shadow-[0_18px_46px_rgba(15,23,42,0.04)] backdrop-blur-sm sm:p-6'>
       <div className='flex items-center justify-between gap-4'>
         <div>
           <p className='text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#a6a9ae]'>
@@ -46,7 +46,7 @@ export function EventList({
           <button
             type='button'
             onClick={onCreate}
-            className='inline-flex items-center gap-2 rounded-full bg-[#111214] px-4 py-2 text-[0.76rem] font-semibold text-white transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]'
+            className='inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#111214] to-[#2a2c30] px-4 py-2.5 text-[0.76rem] font-semibold text-white shadow-[0_6px_18px_rgba(17,18,20,0.18)] transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:scale-105 active:scale-95 hover:shadow-[0_8px_22px_rgba(17,18,20,0.24)]'
           >
             <Plus className='h-3.5 w-3.5' />
             Add event

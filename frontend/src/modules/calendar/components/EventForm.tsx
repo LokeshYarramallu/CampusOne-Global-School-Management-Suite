@@ -96,7 +96,7 @@ export function EventForm({
   return (
     <AnimatePresence>
       <div
-        className='fixed inset-0 z-50 flex items-center justify-center bg-[rgba(17,18,20,0.22)] p-4'
+        className='fixed inset-0 z-50 flex items-center justify-center bg-[rgba(17,18,20,0.28)] backdrop-blur-sm p-4'
         onClick={onClose}
         role='dialog'
         aria-modal='true'
@@ -107,14 +107,14 @@ export function EventForm({
           exit={{ opacity: 0, scale: 0.96, y: 12 }}
           transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
           onClick={(e) => e.stopPropagation()}
-          className='w-full max-w-md rounded-[28px] border border-[#e6ebf2] bg-white p-6 shadow-[0_24px_60px_rgba(17,18,20,0.16)]'
+          className='w-full max-w-md rounded-[26px] border border-[#e8ebf1] bg-white/96 p-6 shadow-[0_30px_80px_rgba(17,18,20,0.18)] backdrop-blur-md'
         >
           <div className='flex items-center justify-between'>
             <h3 className='text-lg font-semibold text-[#202226]'>{isEdit ? 'Edit event' : 'New event'}</h3>
             <button
               type='button'
               onClick={onClose}
-              className='rounded-full bg-[#f7f7f8] p-2 text-[#6c7076] transition-colors hover:bg-[#eceef0]'
+              className='rounded-full bg-[#f7f7f8] p-2 text-[#6c7076] transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:scale-105 active:scale-95 hover:bg-[#eceef0]'
               aria-label='Close'
             >
               <X className='h-4 w-4' />
@@ -130,10 +130,10 @@ export function EventForm({
                     type='button'
                     onClick={() => setScope(s)}
                     className={cn(
-                      'rounded-full px-3 py-2 text-[0.76rem] font-semibold transition-colors',
+                      'rounded-full px-3.5 py-2.5 text-[0.76rem] font-semibold transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:scale-105 active:scale-95',
                       scope === s
                         ? 'bg-[#111214] text-white'
-                        : 'bg-[#f7f7f8] text-[#5c5f64] hover:bg-[#eceef0]',
+                        : 'bg-white text-[#5c5f64] ring-1 ring-[#e8ebf1] hover:bg-[#f4f5f6] hover:text-[#202226] hover:ring-[#d9dde3]',
                     )}
                   >
                     {SCOPE_LABELS[s]}
@@ -153,7 +153,7 @@ export function EventForm({
                       setClassLabel(cls?.classLabel ?? '');
                       setSectionLabel(cls?.sectionLabel ?? '');
                     }}
-                    className='mt-1 block w-full rounded-[14px] border border-[#e2e3e6] bg-white px-3 py-2 text-[0.86rem] text-[#202226] outline-none focus:border-[#f97316]'
+                    className='mt-1 block w-full rounded-[16px] border border-[#e4e6e9] bg-white px-3 py-2 text-[0.86rem] text-[#202226] outline-none ring-1 ring-transparent transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] focus:border-[#f97316] focus:ring-[#f97316]/15 focus:shadow-[0_4px_12px_rgba(249,115,22,0.08)]'
                   >
                     {assignedClasses.map((c) => (
                       <option key={`${c.classLabel}-${c.sectionLabel}`} value={c.classLabel}>
@@ -170,7 +170,7 @@ export function EventForm({
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as CalendarEventType)}
-                className='mt-1 block w-full rounded-[14px] border border-[#e2e3e6] bg-white px-3 py-2 text-[0.86rem] text-[#202226] outline-none focus:border-[#f97316]'
+                className='mt-1 block w-full rounded-[16px] border border-[#e4e6e9] bg-white px-3 py-2 text-[0.86rem] text-[#202226] outline-none ring-1 ring-transparent transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] focus:border-[#f97316] focus:ring-[#f97316]/15 focus:shadow-[0_4px_12px_rgba(249,115,22,0.08)]'
               >
                 {CALENDAR_EVENT_TYPES.map((t) => (
                   <option key={t} value={t}>
@@ -188,7 +188,7 @@ export function EventForm({
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder='Event title'
                 required
-                className='mt-1 block w-full rounded-[14px] border border-[#e2e3e6] bg-white px-3 py-2 text-[0.86rem] text-[#202226] outline-none placeholder:text-[#a6a9ae] focus:border-[#f97316]'
+                className='mt-1 block w-full rounded-[16px] border border-[#e2e3e6] bg-white px-3 py-2 text-[0.86rem] text-[#202226] outline-none placeholder:text-[#a6a9ae] focus:border-[#f97316]'
               />
             </label>
 
@@ -199,7 +199,7 @@ export function EventForm({
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder='Optional description'
                 rows={3}
-                className='mt-1 block w-full resize-none rounded-[14px] border border-[#e2e3e6] bg-white px-3 py-2 text-[0.86rem] text-[#202226] outline-none placeholder:text-[#a6a9ae] focus:border-[#f97316]'
+                className='mt-1 block w-full resize-none rounded-[16px] border border-[#e2e3e6] bg-white px-3 py-2 text-[0.86rem] text-[#202226] outline-none placeholder:text-[#a6a9ae] focus:border-[#f97316]'
               />
             </label>
 
@@ -211,7 +211,7 @@ export function EventForm({
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
                   required
-                  className='mt-1 block w-full rounded-[14px] border border-[#e2e3e6] bg-white px-3 py-2 text-[0.86rem] text-[#202226] outline-none focus:border-[#f97316]'
+                  className='mt-1 block w-full rounded-[16px] border border-[#e4e6e9] bg-white px-3 py-2 text-[0.86rem] text-[#202226] outline-none ring-1 ring-transparent transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] focus:border-[#f97316] focus:ring-[#f97316]/15 focus:shadow-[0_4px_12px_rgba(249,115,22,0.08)]'
                 />
               </label>
               <label className='block'>
@@ -220,7 +220,7 @@ export function EventForm({
                   type='time'
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className='mt-1 block w-full rounded-[14px] border border-[#e2e3e6] bg-white px-3 py-2 text-[0.86rem] text-[#202226] outline-none focus:border-[#f97316]'
+                  className='mt-1 block w-full rounded-[16px] border border-[#e4e6e9] bg-white px-3 py-2 text-[0.86rem] text-[#202226] outline-none ring-1 ring-transparent transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] focus:border-[#f97316] focus:ring-[#f97316]/15 focus:shadow-[0_4px_12px_rgba(249,115,22,0.08)]'
                 />
               </label>
               <label className='block'>
@@ -229,7 +229,7 @@ export function EventForm({
                   type='time'
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className='mt-1 block w-full rounded-[14px] border border-[#e2e3e6] bg-white px-3 py-2 text-[0.86rem] text-[#202226] outline-none focus:border-[#f97316]'
+                  className='mt-1 block w-full rounded-[16px] border border-[#e4e6e9] bg-white px-3 py-2 text-[0.86rem] text-[#202226] outline-none ring-1 ring-transparent transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] focus:border-[#f97316] focus:ring-[#f97316]/15 focus:shadow-[0_4px_12px_rgba(249,115,22,0.08)]'
                 />
               </label>
             </div>
@@ -238,7 +238,7 @@ export function EventForm({
               <button
                 type='button'
                 onClick={onClose}
-                className='rounded-full px-4 py-2 text-[0.8rem] font-semibold text-[#5c5f64] transition-colors hover:bg-[#f7f7f8]'
+                className='rounded-full px-4 py-2 text-[0.8rem] font-semibold text-[#5c5f64] ring-1 ring-transparent transition-all duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-[#f4f5f6] hover:scale-105 active:scale-95'
               >
                 Cancel
               </button>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -94,7 +94,7 @@ export function LoginForm() {
       // to an enabled state with a live session already open.
       setStatus('success');
       redirectTimer.current = window.setTimeout(() => {
-        router.push('/dashboard');
+        router.push('/calendar');
         router.refresh();
       }, REDIRECT_DELAY_MS);
     } catch (error) {
