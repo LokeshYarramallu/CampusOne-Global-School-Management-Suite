@@ -1,55 +1,49 @@
 'use client';
 
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ApiError } from '@/core/http/apiError';
 import { StatusNotice } from '@/shared/components/StatusNotice';
-import { TextField } from '@/shared/components/TextField';
 import { SECONDARY_BUTTON_CLASS } from '@/shared/components/fieldStyles';
-import { getAccountProfile, updateProfile } from '../services/profileApi';
+import { getAccountProfile } from '../services/profileApi';
 import type { AccountProfile } from '../types/profile';
-import { ManagedField } from './ManagedField';
-import { PanelSection } from './PanelSection';
-import { RolePanel } from './panels/RolePanel';
+import { StatTiles } from './Primitives';
+import { AccountSecurity } from './AccountSecurity';
+import { ContactCard } from './ContactCard';
+import { ProfileHeader } from './ProfileHeader';
+import { RolePanel, statsFor } from './panels/RolePanel';
 
 type LoadState = 'loading' | 'ready' | 'error';
-type SaveState = 'idle' | 'saving';
 
 /**
  * The account page.
  *
- * A **shared core** identical in every role view, plus **exactly one role
- * panel** the server chose from the active role. A person holding two roles
- * sees one panel at a time — never a blend (FR-013, FR-014).
+ * Layout follows what professional profile surfaces actually do: a cover band
+ * anchoring the portrait and name, a row of headline facts, then a fixed
+ * identity rail beside a content grid. The earlier single tall column made
+ * every role's page look the same and forced the eye through everything.
  *
- * Every area defines its empty, loading, and error state before build
- * (PRD §11); there is no path that renders a blank region.
+ * A **shared core** identical in every role view, plus **exactly one role
+ * panel** the server chose from the active role (FR-013, FR-014).
  */
 export function ProfileShell() {
   const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [phone, setPhone] = useState('');
-  const [phoneError, setPhoneError] = useState<string | undefined>();
-  const [saveState, setSaveState] = useState<SaveState>('idle');
-  const [banner, setBanner] = useState<{
-    tone: 'error' | 'info';
-    text: string;
-  } | null>(null);
-  const bannerRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
-    let cancelled = false;
+    // Aborting on cleanup, not just ignoring the result: React runs effects
+    // twice in development, and two in-flight requests each open a database
+    // transaction that competes with the other.
+    const controller = new AbortController();
 
-    getAccountProfile()
+    getAccountProfile(controller.signal)
       .then((loaded) => {
-        if (cancelled) return;
+        if (controller.signal.aborted) return;
         setProfile(loaded);
-        setPhone(loaded.identity.phone ?? '');
         setLoadState('ready');
       })
       .catch((error: unknown) => {
-        if (cancelled) return;
+        if (controller.signal.aborted) return;
         setLoadError(
           error instanceof ApiError
             ? error.message
@@ -58,62 +52,12 @@ export function ProfileShell() {
         setLoadState('error');
       });
 
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, []);
-
-  useEffect(() => {
-    if (banner) bannerRef.current?.focus();
-  }, [banner]);
-
-  async function handleSave(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (saveState === 'saving') return;
-
-    setPhoneError(undefined);
-    setBanner(null);
-
-    const trimmed = phone.trim();
-    if (trimmed.length > 0 && !/^[+0-9 ()-]{6,32}$/.test(trimmed)) {
-      setPhoneError(
-        'Enter a phone number using digits and the characters + ( ) - only.',
-      );
-      return;
-    }
-
-    setSaveState('saving');
-    try {
-      const updated = await updateProfile({ phone: trimmed });
-      setProfile(updated);
-      setBanner({ tone: 'info', text: 'Your details were saved.' });
-    } catch (error) {
-      if (error instanceof ApiError && Array.isArray(error.details)) {
-        const message = error.details.find(
-          (entry): entry is string =>
-            typeof entry === 'string' && entry.startsWith('phone '),
-        );
-        if (message) {
-          setPhoneError(`${message.charAt(0).toUpperCase()}${message.slice(1)}.`);
-          setSaveState('idle');
-          return;
-        }
-      }
-      setBanner({
-        tone: 'error',
-        text:
-          error instanceof ApiError
-            ? error.message
-            : 'We could not save your details. Please try again.',
-      });
-    } finally {
-      setSaveState('idle');
-    }
-  }
 
   if (loadState === 'loading') {
     return (
-      <main className="mx-auto max-w-4xl px-5 py-12 sm:px-8">
+      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <p className="text-sm text-[#4a4f54]" aria-live="polite">
           Loading your account…
         </p>
@@ -123,11 +67,11 @@ export function ProfileShell() {
 
   if (loadState === 'error' || !profile) {
     return (
-      <main className="mx-auto max-w-4xl px-5 py-12 sm:px-8">
+      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <h1 className="text-2xl font-semibold tracking-[-0.03em] text-[#202226]">
           Your account
         </h1>
-        <div className="mt-6">
+        <div className="mt-6 max-w-xl">
           <StatusNotice tone="error" eyebrow="Could not load" role="alert">
             {loadError}
           </StatusNotice>
@@ -143,137 +87,70 @@ export function ProfileShell() {
     );
   }
 
-  const { identity, activeContext, security, editability } = profile;
+  const { identity, activeContext, panel } = profile;
+  const subtitle = subtitleFor(profile);
 
   return (
-    <main className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
-      <header className="mb-8 flex flex-wrap items-center gap-5 border-b border-[#e4e7e9] pb-7">
-        <div
-          aria-hidden="true"
-          className="grid h-16 w-16 shrink-0 place-items-center rounded-[22px_6px_22px_6px] bg-[#111214] text-lg font-bold text-white"
-        >
-          {identity.avatarInitials}
-        </div>
-        <div className="min-w-0">
-          {/* The document's only h1, present at every breakpoint. */}
-          <h1 className="text-[1.9rem] font-semibold leading-tight tracking-[-0.04em] text-[#202226]">
-            {identity.displayName}
-          </h1>
-          <p className="mt-1 text-sm text-[#4a4f54]">
-            {activeContext.roleName}
-            {activeContext.schoolName ? ` · ${activeContext.schoolName}` : ''}
-          </p>
-        </div>
-        {activeContext.hasMultipleRoles ? (
-          <p className="w-full text-xs leading-5 text-[#5f6469]">
-            You hold more than one role. This page shows the details for{' '}
-            <strong className="font-semibold text-[#202226]">
-              {activeContext.roleName}
-            </strong>
-            .
-          </p>
-        ) : null}
-      </header>
+    <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
+      <ProfileHeader
+        name={identity.displayName}
+        initials={identity.avatarInitials}
+        photoUrl={identity.photoUrl}
+        subtitle={subtitle}
+        roleName={activeContext.roleName}
+        schoolName={activeContext.schoolName}
+      />
 
-      {banner ? (
-        <div className="mb-6">
-          <StatusNotice
-            ref={bannerRef}
-            tone={banner.tone}
-            eyebrow={banner.tone === 'error' ? 'Could not save' : 'Saved'}
-            role={banner.tone === 'error' ? 'alert' : 'status'}
-          >
-            {banner.text}
-          </StatusNotice>
-        </div>
-      ) : null}
-
-      <div className="space-y-5">
-        <PanelSection
-          title="Your details"
-          description="Your name and email follow you across every school."
-        >
-          <form onSubmit={handleSave} aria-busy={saveState === 'saving'}>
-            <dl>
-              <ManagedField
-                label="Full name"
-                value={`${identity.givenName} ${identity.familyName}`}
-                editability={editability.givenName ?? 'APPROVAL'}
-              />
-              <ManagedField
-                label="Email address"
-                value={identity.email}
-                editability={editability.email ?? 'APPROVAL'}
-              />
-            </dl>
-
-            <div className="mt-5 max-w-sm">
-              <TextField
-                id="phone"
-                type="tel"
-                label="Phone number"
-                autoComplete="tel"
-                placeholder="+91 98000 00000"
-                value={phone}
-                error={phoneError}
-                disabled={saveState === 'saving'}
-                onChange={(event) => setPhone(event.target.value)}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={saveState === 'saving'}
-              className={`${SECONDARY_BUTTON_CLASS} mt-4`}
-            >
-              {saveState === 'saving' ? 'Saving…' : 'Save changes'}
-            </button>
-            <p role="status" aria-live="polite" className="sr-only">
-              {saveState === 'saving' ? 'Saving your details.' : ''}
-            </p>
-          </form>
-        </PanelSection>
-
-        <RolePanel panel={profile.panel} />
-
-        <PanelSection
-          title="Security"
-          description="How this account is protected."
-        >
-          <dl>
-            <ManagedField
-              label="Password last changed"
-              value={
-                security.passwordChangedAt
-                  ? new Date(security.passwordChangedAt).toLocaleDateString()
-                  : null
-              }
-              editability="SELF"
-              placeholder="Never changed"
-            />
-            <ManagedField
-              label="Additional sign-in factors"
-              value={
-                security.mfaFactors.length > 0
-                  ? security.mfaFactors.map((f) => f.factorType).join(', ')
-                  : null
-              }
-              editability="SELF"
-              placeholder="None enrolled"
-            />
-            <ManagedField
-              label="Active sessions"
-              value={String(security.activeSessionCount)}
-              editability="SELF"
-            />
-          </dl>
-        </PanelSection>
+      <div className="mt-4">
+        <StatTiles stats={statsFor(panel)} />
       </div>
 
-      <p className="mt-8 border-t border-[#e4e7e9] pt-5 text-[0.7rem] leading-5 text-[#5f6469]">
-        Photo upload, email change, and additional sign-in factors are not
-        available yet.
+      {/* Identity rail beside the content grid — the two-column arrangement a
+          reference surface needs. Stacks on mobile. */}
+      <div className="mt-4 grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start">
+        <aside className="space-y-4 lg:sticky lg:top-6">
+          <ContactCard profile={profile} onUpdated={setProfile} />
+
+          {activeContext.hasMultipleRoles ? (
+            <p className="border border-[#e0e4e6] bg-[#fbfcfc] px-4 py-3 text-[0.7rem] leading-5 text-[#5f6469]">
+              You hold more than one role. This page shows{' '}
+              <strong className="font-semibold text-[#202226]">
+                {activeContext.roleName}
+              </strong>
+              .
+            </p>
+          ) : null}
+        </aside>
+
+        <div className="grid content-start gap-4 lg:grid-cols-2">
+          <RolePanel panel={panel} />
+          <AccountSecurity profile={profile} />
+        </div>
+      </div>
+
+      <p className="mt-6 text-[0.7rem] leading-5 text-[#5f6469]">
+        Two-step sign-in arrives with the identity provider. Photo upload from
+        your device replaces the portrait picker once file storage is in place.
       </p>
     </main>
   );
+}
+
+/** The line under a name: job title for staff, class for a student. */
+function subtitleFor(profile: AccountProfile): string | null {
+  const { panel } = profile;
+  if (panel.kind === 'STAFF' || panel.kind === 'TEACHER') {
+    return panel.staff?.designation ?? null;
+  }
+  if (panel.kind === 'STUDENT' && panel.enrollment) {
+    return `Class ${panel.enrollment.classLabel}-${panel.enrollment.sectionLabel} · Admission ${panel.enrollment.admissionNumber}`;
+  }
+  if (panel.kind === 'PARENT') {
+    const children = panel.schools.reduce((n, s) => n + s.children.length, 0);
+    return children > 0
+      ? `${children} ${children === 1 ? 'child' : 'children'} across ${panel.schools.length} ${panel.schools.length === 1 ? 'school' : 'schools'}`
+      : null;
+  }
+  if (panel.kind === 'PLATFORM') return 'Platform operations';
+  return null;
 }

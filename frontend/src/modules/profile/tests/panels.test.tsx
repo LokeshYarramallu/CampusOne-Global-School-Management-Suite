@@ -34,7 +34,7 @@ describe('RolePanel', () => {
     render(<RolePanel panel={panel} />);
 
     expect(screen.getByText('EMP-0002')).toBeInTheDocument();
-    expect(screen.getByText(/what this role cannot do/i)).toBeInTheDocument();
+    expect(screen.getByText(/access limits/i)).toBeInTheDocument();
     expect(screen.getByText(/cannot modify academic records/i)).toBeInTheDocument();
   });
 
@@ -51,7 +51,7 @@ describe('RolePanel', () => {
     };
     render(<RolePanel panel={panel} />);
 
-    expect(screen.getByText('Class 8-B')).toBeInTheDocument();
+    expect(screen.getByText('8-B')).toBeInTheDocument();
     expect(screen.getByText(/class teacher/i)).toBeInTheDocument();
     expect(screen.getAllByText('Mathematics')).toHaveLength(2);
   });
@@ -103,7 +103,7 @@ describe('RolePanel', () => {
     };
     render(<RolePanel panel={panel} />);
 
-    expect(screen.getByText(/no guardians are linked/i)).toBeInTheDocument();
+    expect(screen.getByText(/no guardians linked yet/i)).toBeInTheDocument();
   });
 
   describe('parent panel', () => {
@@ -154,7 +154,7 @@ describe('RolePanel', () => {
       render(<RolePanel panel={twoSchools} />);
 
       expect(screen.getByText(/primary contact/i)).toBeInTheDocument();
-      expect(screen.getByText(/billing responsibility/i)).toBeInTheDocument();
+      expect(screen.getByText(/^billing$/i)).toBeInTheDocument();
     });
 
     it('explains an empty children list', () => {

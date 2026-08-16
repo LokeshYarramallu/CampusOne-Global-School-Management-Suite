@@ -25,26 +25,32 @@ function createResolver(
   parentOverrides: Partial<ParentLinkRepository> = {},
 ) {
   const panels = {
-    findStaffRecord: jest.fn().mockResolvedValue({
-      employeeNumber: 'EMP-0004',
-      designation: 'Senior Teacher',
-      department: 'Mathematics',
-      joinedOn: new Date('2024-06-01'),
+    loadStaffPanel: jest.fn().mockResolvedValue({
+      featureEnabled: true,
+      staff: {
+        employeeNumber: 'EMP-0004',
+        designation: 'Senior Teacher',
+        department: 'Mathematics',
+        joinedOn: new Date('2024-06-01'),
+      },
+      assignments: [
+        {
+          subjectLabel: 'Mathematics',
+          classLabel: '8',
+          sectionLabel: 'B',
+          isClassTeacher: true,
+        },
+      ],
     }),
-    findTeachingAssignments: jest.fn().mockResolvedValue([
-      {
-        subjectLabel: 'Mathematics',
+    loadStudentPanel: jest.fn().mockResolvedValue({
+      featureEnabled: true,
+      enrollment: {
+        admissionNumber: '2024-0417',
         classLabel: '8',
         sectionLabel: 'B',
-        isClassTeacher: true,
+        rollNumber: '17',
+        admittedOn: new Date('2024-06-10'),
       },
-    ]),
-    findEnrollment: jest.fn().mockResolvedValue({
-      admissionNumber: '2024-0417',
-      classLabel: '8',
-      sectionLabel: 'B',
-      rollNumber: '17',
-      admittedOn: new Date('2024-06-10'),
     }),
     isFeatureEnabled: jest.fn().mockResolvedValue(true),
     ...panelOverrides,
@@ -98,7 +104,7 @@ describe('PanelResolverService', () => {
       expect(panel).toMatchObject({ kind: PANEL_KINDS.PLATFORM });
       expect(JSON.stringify(panel)).not.toContain('employeeNumber');
       // No tenant-owned table is even consulted.
-      expect(panels.findStaffRecord).not.toHaveBeenCalled();
+      expect(panels.loadStaffPanel).not.toHaveBeenCalled();
     });
 
     it('does not include another role panel fields', async () => {
@@ -132,7 +138,11 @@ describe('PanelResolverService', () => {
   describe('empty states (FR-033)', () => {
     it('explains an absent staff record rather than rendering blank', async () => {
       const { resolver } = createResolver({
-        findStaffRecord: jest.fn().mockResolvedValue(null),
+        loadStaffPanel: jest.fn().mockResolvedValue({
+          featureEnabled: true,
+          staff: null,
+          assignments: [],
+        }),
       });
 
       const panel = await resolver.resolve(
@@ -147,7 +157,16 @@ describe('PanelResolverService', () => {
 
     it('explains an absent teaching assignment', async () => {
       const { resolver } = createResolver({
-        findTeachingAssignments: jest.fn().mockResolvedValue([]),
+        loadStaffPanel: jest.fn().mockResolvedValue({
+          featureEnabled: true,
+          staff: {
+            employeeNumber: 'EMP-0004',
+            designation: 'Senior Teacher',
+            department: 'Mathematics',
+            joinedOn: new Date('2024-06-01'),
+          },
+          assignments: [],
+        }),
       });
 
       const panel = await resolver.resolve(principal({ roleKey: 'TEACHER' }));
@@ -159,7 +178,10 @@ describe('PanelResolverService', () => {
 
     it('explains an absent enrolment', async () => {
       const { resolver } = createResolver({
-        findEnrollment: jest.fn().mockResolvedValue(null),
+        loadStudentPanel: jest.fn().mockResolvedValue({
+          featureEnabled: true,
+          enrollment: null,
+        }),
       });
 
       const panel = await resolver.resolve(principal({ roleKey: 'STUDENT' }));
@@ -189,7 +211,9 @@ describe('PanelResolverService', () => {
   describe('feature gating (FR-038)', () => {
     it('makes a gated-off panel unavailable', async () => {
       const { resolver } = createResolver({
-        isFeatureEnabled: jest.fn().mockResolvedValue(false),
+        loadStudentPanel: jest
+          .fn()
+          .mockResolvedValue({ featureEnabled: false, enrollment: null }),
       });
 
       const panel = await resolver.resolve(principal({ roleKey: 'STUDENT' }));
@@ -198,14 +222,18 @@ describe('PanelResolverService', () => {
     });
 
     it('does not read the underlying data when gated off', async () => {
-      const { resolver, panels } = createResolver({
-        isFeatureEnabled: jest.fn().mockResolvedValue(false),
+      const { resolver } = createResolver({
+        loadStudentPanel: jest
+          .fn()
+          .mockResolvedValue({ featureEnabled: false, enrollment: null }),
       });
 
-      await resolver.resolve(principal({ roleKey: 'STUDENT' }));
+      const panel = await resolver.resolve(principal({ roleKey: 'STUDENT' }));
 
-      // Unreachable, not merely hidden.
-      expect(panels.findEnrollment).not.toHaveBeenCalled();
+      // Unreachable, not merely hidden: the repository short circuits on the
+      // flag and never selects the enrolment row.
+      expect(panel).toMatchObject({ kind: PANEL_KINDS.UNAVAILABLE });
+      expect(JSON.stringify(panel)).not.toContain('admissionNumber');
     });
   });
 
@@ -218,7 +246,7 @@ describe('PanelResolverService', () => {
       );
 
       expect(panel.kind).toBe(PANEL_KINDS.UNAVAILABLE);
-      expect(panels.findStaffRecord).not.toHaveBeenCalled();
+      expect(panels.loadStaffPanel).not.toHaveBeenCalled();
     });
 
     it('reads with the principal own tenant, never a supplied one', async () => {
@@ -228,9 +256,10 @@ describe('PanelResolverService', () => {
         principal({ roleKey: 'TEACHER', tenantId: TENANT_B }),
       );
 
-      expect(panels.findStaffRecord).toHaveBeenCalledWith(
+      expect(panels.loadStaffPanel).toHaveBeenCalledWith(
         expect.objectContaining({ tenantId: TENANT_B }),
         'user-1',
+        true,
       );
     });
   });

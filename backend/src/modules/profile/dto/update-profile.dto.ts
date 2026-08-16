@@ -1,4 +1,11 @@
-import { IsOptional, IsString, Matches, MaxLength } from 'class-validator';
+import {
+  IsIn,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+} from 'class-validator';
+import { AVATAR_KEYS } from '../profile.constants';
 
 /**
  * Only self-editable fields appear here.
@@ -17,4 +24,31 @@ export class UpdateProfileDto {
       'phone must contain only digits, spaces, and the characters + ( ) -',
   })
   phone?: string;
+
+  /**
+   * One of the known portrait keys. Not a URL — see `AVATAR_KEYS`.
+   */
+  @IsOptional()
+  @IsIn(AVATAR_KEYS)
+  avatarKey?: string;
+
+  /**
+   * Address is self-editable for adults and school-managed for learners; the
+   * service decides by role. Declaring it here only makes it *expressible* —
+   * `updateProfile` still rejects it for a student.
+   */
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  addressLine?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  addressCity?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(16)
+  addressPostcode?: string;
 }

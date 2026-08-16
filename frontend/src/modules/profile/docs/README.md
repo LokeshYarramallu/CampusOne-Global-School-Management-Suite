@@ -22,12 +22,50 @@ internal.
 
 ```
 components/
-  ProfileShell.tsx      shared core + save flow
-  PanelSection.tsx      titled card; makes the empty state hard to omit
-  ManagedField.tsx      a field the person cannot edit, and why
-  panels/RolePanel.tsx  lookup on panel.kind → one panel
+  ProfileShell.tsx       cover + identity rail + content grid
+  ProfileHeader.tsx      cover band with the portrait overlapping it
+  ContactCard.tsx        contact details and the self-edit affordance
+  AccountSecurity.tsx    provenance, password, devices, recent activity
+  Primitives.tsx         Card, DataGrid, Field, StatTiles
+  panels/RolePanel.tsx   lookup on panel.kind → one panel, plus statsFor()
 services/  schemas/  types/  docs/  tests/
 ```
+
+## Layout
+
+Modelled on what professional profile surfaces actually do, rather than a form:
+
+- **Cover band with the portrait overlapping it** — establishes who this is
+  before any data is read, and carries the brand orange from the sign-in screen.
+- **Stat tiles** — the three or four facts people came for, read first.
+- **Identity rail beside a content grid**, not one tall column. The rail holds
+  contact and security (identical for everyone); the grid holds the role panel.
+- **Cards state ownership once**, in the header. Fields inside are label/value
+  pairs in a two-column grid.
+
+An earlier version stacked everything in a single column and repeated
+"Maintained by your school. Contact your school administrator…" beneath all
+four fields of a staff record. A temporary gallery rendering all seven roles
+side by side made both problems obvious; it was removed once the design
+settled.
+
+## Editability is per role
+
+Accounts are **provisioned from above**: the platform registers a school, the
+school creates staff and learners, and enrolling a learner brings the
+guardian's account into being. Nobody self-registers. Two consequences shape
+this module:
+
+- **Names are fixed at creation.** They come from the record the school
+  entered; renaming yourself would decouple the account from the roll.
+- **A person edits their own contact details, nobody else's.** A learner may
+  change their phone and portrait but not the household address, and never a
+  guardian's details. An adult owns their address outright.
+
+`editabilityFor(roleKey)` on the server is the single source; the map is
+returned in `editability` and the interface renders from it. The service
+re-checks on write, so a learner posting an address change is rejected at the
+API even though the same field is editable for their parent.
 
 ## Key decisions
 
@@ -39,14 +77,19 @@ acting in contributes nothing to the response, so there is nothing to hide.
 **`editability` is not inferred here.** It arrives from the API, so the
 read-only affordance and what the API will actually accept cannot drift.
 
-**Every non-editable field explains itself.** `ManagedField` takes the tier as a
-required prop, which makes an unexplained disabled control awkward to write.
-That is the point — a greyed-out box with no reason is how people end up filing
-a ticket to change their own phone number.
+**Ownership is stated once per card, not per field.** The requirement is that a
+person can tell who maintains a field (FR-023), not that every field repeats the
+same sentence. Repetition is how people stop reading the sentence that matters.
+Editing is behind an explicit affordance, so read-only is the resting state.
 
-**`PanelSection` takes `emptyReason` as a first-class prop.** PRD §11 requires
-every list and detail view to define its empty state before build; the component
-shape enforces the habit.
+**`Card` takes `empty` as a first-class prop.** PRD §11 requires every list and
+detail view to define its empty state before build; the component shape enforces
+the habit.
+
+**Portraits are illustrated SVGs in `public/avatars/`,** seeded into
+`user_profile.photo_reference`. They are drawings, not photographs of real
+people — appropriate for demo data on a platform holding children's records.
+Upload still needs a storage adapter; the initials block remains the fallback.
 
 **Shared UI lives in `@/shared/components`.** `TextField` and `StatusNotice`
 moved out of the identity module when this became their second consumer — the
@@ -62,7 +105,8 @@ Covers the loading, ready, and error states; saving a phone number; client-side
 rejection without an API call; server errors surfaced in an alert; the
 explanation on every non-editable field; single heading structure; initials
 instead of a broken image; role separation (a teacher sees no children section);
-and every panel including its empty state.
+the device list, its sign-out path and its load failure; recent activity with no
+address in the rendered output; and every panel including its empty state.
 
 ## Limitations
 
@@ -70,6 +114,5 @@ and every panel including its empty state.
   so rather than offering controls that do nothing.
 - **No role switcher.** When a person holds several roles the page names the
   active one; switching arrives with the role-switching capability.
-- **Sessions and activity are not yet on the page.** The endpoints and the
-  service functions exist (`getSessions`, `endSession`, `getActivity`); the UI
-  for them is the next increment (spec US4).
+- **The current session cannot sign itself out from here.** Other devices can;
+  ending your own is what the sign-out control in the shell is for.

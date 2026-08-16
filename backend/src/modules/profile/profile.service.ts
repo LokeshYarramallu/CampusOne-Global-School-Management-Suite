@@ -10,8 +10,9 @@ import {
 } from './panel-resolver.service';
 import {
   EDITABILITY,
-  FIELD_EDITABILITY,
   PROFILE_ERROR_CODES,
+  avatarPathFor,
+  editabilityFor,
   isSelfEditable,
 } from './profile.constants';
 import type { UpdateProfileDto } from './dto/update-profile.dto';
@@ -27,6 +28,9 @@ export interface AccountProfile {
     displayName: string;
     email: string;
     phone: string | null;
+    addressLine: string | null;
+    addressCity: string | null;
+    addressPostcode: string | null;
     photoUrl: string | null;
     avatarInitials: string;
   };
@@ -41,6 +45,13 @@ export interface AccountProfile {
     passwordChangedAt: string | null;
     mfaFactors: Array<{ factorType: string; verified: boolean }>;
     activeSessionCount: number;
+  };
+  /** Provenance: every account here was created by someone above it. */
+  account: {
+    createdAt: string;
+    status: string;
+    lastLoginAt: string | null;
+    provisionedBy: string;
   };
   editability: Record<string, string>;
   panel: ProfilePanel;
@@ -64,21 +75,26 @@ export class ProfileService {
    * that accepts a user id from a caller (FR-028).
    */
   async getAccountProfile(principal: AuthPrincipal): Promise<AccountProfile> {
-    const [
-      profile,
-      contact,
-      sessions,
-      mfaFactors,
-      passwordChangedAt,
-      roleCount,
-    ] = await Promise.all([
-      this.profiles.findProfile(principal.userId),
-      this.profiles.findContact(principal.userId),
-      this.profiles.findActiveSessions(principal.userId),
-      this.profiles.findMfaFactors(principal.userId),
-      this.profiles.findPasswordChangedAt(principal.userId),
-      this.profiles.countRoleAssignments(principal.userId),
-    ]);
+    // Two phases, deliberately.
+    //
+    // Everything here is a plain query, so issuing them together costs one
+    // round trip rather than six. The role panel is *not* in this batch: it
+    // opens an interactive transaction, which holds a connection for its whole
+    // duration. Running it alongside six concurrent queries starves it of a
+    // connection and it fails with "Unable to start a transaction in the given
+    // time" — which is how this was found.
+    const [profile, contact, sessions, mfaFactors, roleCount, account, school] =
+      await Promise.all([
+        this.profiles.findProfile(principal.userId),
+        this.profiles.findContact(principal.userId),
+        this.profiles.findActiveSessions(principal.userId),
+        this.profiles.findMfaFactors(principal.userId),
+        this.profiles.countRoleAssignments(principal.userId),
+        this.profiles.findAccountMeta(principal.userId),
+        principal.tenantId
+          ? this.tenants.findById(principal.tenantId)
+          : Promise.resolve(null),
+      ]);
 
     if (!profile || !contact) {
       // A signed-in person with no profile row is a seeding defect, not
@@ -91,10 +107,6 @@ export class ProfileService {
       });
     }
 
-    const school = principal.tenantId
-      ? await this.tenants.findById(principal.tenantId)
-      : null;
-
     const displayName =
       profile.displayName ?? `${profile.givenName} ${profile.familyName}`;
 
@@ -106,9 +118,12 @@ export class ProfileService {
         displayName,
         email: contact.email,
         phone: contact.phone,
-        // Always null: photo upload is deferred until file storage exists
-        // (research R2). The column is present so no migration is needed then.
-        photoUrl: null,
+        addressLine: profile.addressLine,
+        addressCity: profile.addressCity,
+        addressPostcode: profile.addressPostcode,
+        // A path this server chose, from the key catalogue — never a value the
+        // client supplied. Null falls back to the initials block.
+        photoUrl: profile.photoReference,
         avatarInitials: ProfileService.initialsOf(
           profile.givenName,
           profile.familyName,
@@ -122,11 +137,18 @@ export class ProfileService {
         hasMultipleRoles: roleCount > 1,
       },
       security: {
-        passwordChangedAt: passwordChangedAt?.toISOString() ?? null,
+        passwordChangedAt: contact.updatedAt.toISOString(),
         mfaFactors,
         activeSessionCount: sessions.length,
       },
-      editability: FIELD_EDITABILITY,
+      account: {
+        createdAt: account?.createdAt.toISOString() ?? '',
+        status: account?.status ?? 'ACTIVE',
+        lastLoginAt: account?.lastLoginAt?.toISOString() ?? null,
+        provisionedBy: ProfileService.provisionedBy(principal.roleKey),
+      },
+      editability: editabilityFor(principal.roleKey),
+      // Phase two: the pool is free again, so the transaction starts at once.
       panel: await this.panelResolver.resolve(principal),
     };
   }
@@ -139,11 +161,13 @@ export class ProfileService {
     principal: AuthPrincipal,
     changes: UpdateProfileDto,
   ): Promise<void> {
+    // Checked against *this role's* rules. A learner sending an address change
+    // is rejected here even though the same field is editable for their parent.
     for (const field of Object.keys(changes)) {
-      if (!isSelfEditable(field)) {
+      if (!isSelfEditable(principal.roleKey, field)) {
         throw new AppException({
           code: PROFILE_ERROR_CODES.FIELD_NOT_EDITABLE,
-          message: ProfileService.notEditableMessage(field),
+          message: ProfileService.notEditableMessage(principal.roleKey, field),
           status: 403,
         });
       }
@@ -151,6 +175,30 @@ export class ProfileService {
 
     if (changes.phone !== undefined) {
       await this.profiles.updatePhone(principal.userId, changes.phone.trim());
+    }
+
+    // A key, never a path. The mapping happens here so a client cannot point
+    // the portrait at an arbitrary URL.
+    if (changes.avatarKey !== undefined) {
+      await this.profiles.updatePhoto(
+        principal.userId,
+        avatarPathFor(changes.avatarKey),
+      );
+    }
+
+    const address = {
+      ...(changes.addressLine !== undefined
+        ? { addressLine: changes.addressLine.trim() }
+        : {}),
+      ...(changes.addressCity !== undefined
+        ? { addressCity: changes.addressCity.trim() }
+        : {}),
+      ...(changes.addressPostcode !== undefined
+        ? { addressPostcode: changes.addressPostcode.trim() }
+        : {}),
+    };
+    if (Object.keys(address).length > 0) {
+      await this.profiles.updateAddress(principal.userId, address);
     }
   }
 
@@ -244,12 +292,25 @@ export class ProfileService {
     }));
   }
 
+  /**
+   * Who creates this kind of account, per the provisioning model: the platform
+   * registers schools, a school creates its staff and learners, and creating a
+   * learner brings their guardian's account into being.
+   */
+  private static provisionedBy(roleKey: string): string {
+    if (roleKey === 'PLATFORM_SUPER_ADMIN') return 'CampusOne platform';
+    if (roleKey === 'PARENT_GUARDIAN')
+      return 'Created automatically when your child was enrolled';
+    if (roleKey === 'STUDENT') return 'Your school office';
+    return 'Your school administrator';
+  }
+
   private static initialsOf(givenName: string, familyName: string): string {
     return `${givenName.charAt(0)}${familyName.charAt(0)}`.toUpperCase();
   }
 
-  private static notEditableMessage(field: string): string {
-    const tier = FIELD_EDITABILITY[field];
+  private static notEditableMessage(roleKey: string, field: string): string {
+    const tier = editabilityFor(roleKey)[field];
     if (tier === EDITABILITY.SCHOOL_MANAGED) {
       return 'That detail is maintained by your school. Contact your school administrator to request a correction.';
     }

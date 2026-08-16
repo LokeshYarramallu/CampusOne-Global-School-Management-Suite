@@ -79,6 +79,9 @@ export interface AccountProfile {
     displayName: string;
     email: string;
     phone: string | null;
+    addressLine: string | null;
+    addressCity: string | null;
+    addressPostcode: string | null;
     photoUrl: string | null;
     avatarInitials: string;
   };
@@ -94,7 +97,17 @@ export interface AccountProfile {
     mfaFactors: Array<{ factorType: string; verified: boolean }>;
     activeSessionCount: number;
   };
-  /** Server-computed, so the read-only affordance cannot drift from the API. */
+  /** Provenance: every account here was created by someone above it. */
+  account: {
+    createdAt: string;
+    status: string;
+    lastLoginAt: string | null;
+    provisionedBy: string;
+  };
+  /**
+   * Server-computed **per role**, so the read-only affordance cannot drift
+   * from what the API accepts. A learner's map differs from their parent's.
+   */
   editability: Record<string, Editability>;
   panel: ProfilePanel;
 }

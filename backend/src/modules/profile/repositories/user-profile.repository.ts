@@ -15,6 +15,9 @@ export interface PersonProfileRow {
   givenName: string;
   familyName: string;
   displayName: string | null;
+  addressLine: string | null;
+  addressCity: string | null;
+  addressPostcode: string | null;
   photoReference: string | null;
 }
 
@@ -53,17 +56,66 @@ export class UserProfileRepository {
         givenName: true,
         familyName: true,
         displayName: true,
+        addressLine: true,
+        addressCity: true,
+        addressPostcode: true,
         photoReference: true,
       },
     });
   }
 
-  async findContact(
-    userId: string,
-  ): Promise<{ email: string; phone: string | null } | null> {
+  /**
+   * Contact details and the password timestamp in one query — they live on the
+   * same row, and the account page needs both. Two round trips for one row is
+   * exactly the kind of avoidable load that turns into pool pressure.
+   */
+  async findContact(userId: string): Promise<{
+    email: string;
+    phone: string | null;
+    updatedAt: Date;
+  } | null> {
     return this.db.userIdentity.findUnique({
       where: { id: userId },
-      select: { email: true, phone: true },
+      select: { email: true, phone: true, updatedAt: true },
+    });
+  }
+
+  async updateAddress(
+    userId: string,
+    address: Partial<{
+      addressLine: string;
+      addressCity: string;
+      addressPostcode: string;
+    }>,
+  ): Promise<void> {
+    await this.db.userProfile.update({
+      where: { userIdentityId: userId },
+      data: address,
+    });
+  }
+
+  async updatePhoto(userId: string, photoReference: string): Promise<void> {
+    await this.db.userProfile.update({
+      where: { userIdentityId: userId },
+      data: { photoReference },
+    });
+  }
+
+  /**
+   * Account provenance. Accounts are provisioned from above — the platform
+   * creates a school, the school creates staff and learners, and a learner's
+   * record creates the guardian's account. Nobody self-registers, so "when was
+   * this account made, and is it active" is information the holder cannot get
+   * anywhere else.
+   */
+  async findAccountMeta(userId: string): Promise<{
+    createdAt: Date;
+    status: string;
+    lastLoginAt: Date | null;
+  } | null> {
+    return this.db.userIdentity.findUnique({
+      where: { id: userId },
+      select: { createdAt: true, status: true, lastLoginAt: true },
     });
   }
 
@@ -125,14 +177,6 @@ export class UserProfileRepository {
       orderBy: { occurredAt: 'desc' },
       take: ACTIVITY_WINDOW_LIMIT,
     });
-  }
-
-  async findPasswordChangedAt(userId: string): Promise<Date | null> {
-    const row = await this.db.userIdentity.findUnique({
-      where: { id: userId },
-      select: { updatedAt: true },
-    });
-    return row?.updatedAt ?? null;
   }
 
   async findMfaFactors(

@@ -36,7 +36,8 @@ function isPanel(value: unknown): value is ProfilePanel {
 export function parseAccountProfile(value: unknown): AccountProfile {
   if (!isRecord(value)) throw invalid();
 
-  const { identity, activeContext, security, editability, panel } = value;
+  const { identity, activeContext, security, account, editability, panel } =
+    value;
 
   if (
     !isRecord(identity) ||
@@ -56,7 +57,12 @@ export function parseAccountProfile(value: unknown): AccountProfile {
     throw invalid();
   }
 
-  if (!isRecord(security) || !isRecord(editability) || !isPanel(panel)) {
+  if (
+    !isRecord(security) ||
+    !isRecord(account) ||
+    !isRecord(editability) ||
+    !isPanel(panel)
+  ) {
     throw invalid();
   }
 

@@ -120,21 +120,11 @@ export class PanelResolverService {
     }
 
     if (principal.roleKey === 'STUDENT') {
-      if (
-        !(await this.panels.isFeatureEnabled(context, 'student-information'))
-      ) {
-        return this.unavailable('Student records');
-      }
       return this.studentPanel(principal);
     }
 
     if (STAFF_ROLES.has(principal.roleKey)) {
-      if (!(await this.panels.isFeatureEnabled(context, 'staff-records'))) {
-        return this.unavailable('Staff records');
-      }
-      return principal.roleKey === 'TEACHER'
-        ? this.teacherPanel(principal)
-        : this.staffPanel(principal);
+      return this.staffOrTeacherPanel(principal);
     }
 
     return {
@@ -150,51 +140,53 @@ export class PanelResolverService {
     };
   }
 
-  private async staffBody(principal: AuthPrincipal): Promise<StaffPanelBody> {
-    const context = tenantContextFrom(principal);
-    const staff = await this.panels.findStaffRecord(context, principal.userId);
+  /**
+   * One database round trip for the whole panel — see the note in
+   * `PanelRepository` on why this is not several concurrent transactions.
+   */
+  private async staffOrTeacherPanel(
+    principal: AuthPrincipal,
+  ): Promise<ProfilePanel> {
+    const isTeacher = principal.roleKey === 'TEACHER';
+    const data = await this.panels.loadStaffPanel(
+      tenantContextFrom(principal),
+      principal.userId,
+      isTeacher,
+    );
 
-    return {
-      staff: staff
+    if (!data.featureEnabled) return this.unavailable('Staff records');
+
+    const body: StaffPanelBody = {
+      staff: data.staff
         ? {
-            employeeNumber: staff.employeeNumber,
-            designation: staff.designation,
-            department: staff.department,
-            joinedOn: staff.joinedOn.toISOString().slice(0, 10),
+            employeeNumber: data.staff.employeeNumber,
+            designation: data.staff.designation,
+            department: data.staff.department,
+            joinedOn: data.staff.joinedOn.toISOString().slice(0, 10),
           }
         : null,
       scopeSummary: this.scopeSummary(principal.roleKey),
       boundaries: PanelResolverService.boundariesFor(principal.roleKey),
-      ...(staff
+      ...(data.staff
         ? {}
         : {
             emptyReason:
               'Your staff record has not been created yet. Your school administrator maintains it.',
           }),
     };
-  }
 
-  private async staffPanel(principal: AuthPrincipal): Promise<ProfilePanel> {
-    return { kind: PANEL_KINDS.STAFF, ...(await this.staffBody(principal)) };
-  }
-
-  private async teacherPanel(principal: AuthPrincipal): Promise<ProfilePanel> {
-    const context = tenantContextFrom(principal);
-    const [body, assignments] = await Promise.all([
-      this.staffBody(principal),
-      this.panels.findTeachingAssignments(context, principal.userId),
-    ]);
+    if (!isTeacher) return { kind: PANEL_KINDS.STAFF, ...body };
 
     return {
       kind: PANEL_KINDS.TEACHER,
       ...body,
-      assignments: assignments.map((assignment) => ({
+      assignments: data.assignments.map((assignment) => ({
         subject: assignment.subjectLabel,
         classLabel: assignment.classLabel,
         sectionLabel: assignment.sectionLabel,
         isClassTeacher: assignment.isClassTeacher,
       })),
-      ...(assignments.length === 0
+      ...(data.assignments.length === 0 && data.staff
         ? {
             emptyReason:
               'No classes are assigned to you yet. Your school administrator sets teaching assignments.',
@@ -204,12 +196,14 @@ export class PanelResolverService {
   }
 
   private async studentPanel(principal: AuthPrincipal): Promise<ProfilePanel> {
-    const context = tenantContextFrom(principal);
-    const enrollment = await this.panels.findEnrollment(
-      context,
+    const data = await this.panels.loadStudentPanel(
+      tenantContextFrom(principal),
       principal.userId,
     );
 
+    if (!data.featureEnabled) return this.unavailable('Student records');
+
+    const { enrollment } = data;
     return {
       kind: PANEL_KINDS.STUDENT,
       enrollment: enrollment

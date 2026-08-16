@@ -14,13 +14,30 @@ import type {
 
 /** The module's only calls to the API. Components never fetch directly. */
 
-export function getAccountProfile(): Promise<AccountProfile> {
-  return apiClient.get<AccountProfile>('/me', { parse: parseAccountProfile });
+/**
+ * `signal` matters more than it looks. React runs effects twice in
+ * development, so without it a mount fires two concurrent requests — and each
+ * one opens a database transaction that competes with the other for a
+ * connection. Aborting on cleanup keeps it to a single in-flight request.
+ */
+export function getAccountProfile(signal?: AbortSignal): Promise<AccountProfile> {
+  return apiClient.get<AccountProfile>('/me', {
+    parse: parseAccountProfile,
+    signal,
+  });
 }
 
-export function updateProfile(changes: {
+export interface ProfileChanges {
   phone?: string;
-}): Promise<AccountProfile> {
+  avatarKey?: string;
+  addressLine?: string;
+  addressCity?: string;
+  addressPostcode?: string;
+}
+
+export function updateProfile(
+  changes: ProfileChanges,
+): Promise<AccountProfile> {
   return apiClient.patch<AccountProfile>('/me', {
     body: changes,
     parse: parseAccountProfile,
