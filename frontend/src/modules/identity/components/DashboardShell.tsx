@@ -1,10 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ApiError } from '@/core/http/apiError';
 import { getCurrentUser, logout } from '../services/authApi';
 import type { AuthUser } from '../types/auth';
+
+/**
+ * Where the built surfaces are reachable from. Until the core application
+ * framework lands (PRD §6.2) there is no shared chrome, so a page with no
+ * inbound link is a page nobody finds.
+ */
+const SURFACES = [
+  { href: '/calendar', title: 'Calendar', hint: 'School, class, and personal events' },
+  { href: '/profile', title: 'Your account', hint: 'Details, devices, and recent activity' },
+] as const;
 
 export function DashboardShell() {
   const router = useRouter();
@@ -31,7 +42,20 @@ export function DashboardShell() {
   return (
     <main className="min-h-screen bg-[#f3f6f8] text-[#12212b]">
       <header className="border-b border-[#dce5e8] bg-white px-6 py-5 sm:px-10"><div className="mx-auto flex max-w-6xl items-center justify-between"><div className="flex items-center gap-3"><div className="grid h-9 w-9 place-items-center rounded-xl bg-[#102e3a] text-sm font-black text-[#83d8c6]">C</div><span className="font-semibold tracking-tight">CampusOne</span></div><button onClick={handleLogout} className="rounded-lg px-3 py-2 text-sm font-semibold text-[#52706f] hover:bg-[#edf8f5]">Sign out</button></div></header>
-      <section className="mx-auto max-w-6xl px-6 py-12 sm:px-10"><p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#438d83]">Platform workspace</p><h1 className="mt-3 text-4xl font-semibold tracking-[-0.04em]">Good to see you.</h1><div className="mt-8 rounded-3xl border border-[#dce5e8] bg-white p-7 shadow-[0_20px_60px_rgba(25,53,64,0.07)]"><p className="text-sm text-[#63737b]">Signed in as</p><p className="mt-2 text-lg font-semibold">{user.email}</p><span className="mt-4 inline-flex rounded-full bg-[#e9f7f3] px-3 py-1.5 text-xs font-bold text-[#32776f]">{user.roleName}</span><p className="mt-6 max-w-xl text-sm leading-6 text-[#63737b]">The authentication foundation is active. This is the starting point for the Platform Super Admin screens and tenant management workflows.</p></div></section>
+      <section className="mx-auto max-w-6xl px-6 py-12 sm:px-10"><p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#438d83]">Platform workspace</p><h1 className="mt-3 text-4xl font-semibold tracking-[-0.04em]">Good to see you.</h1><div className="mt-8 rounded-3xl border border-[#dce5e8] bg-white p-7 shadow-[0_20px_60px_rgba(25,53,64,0.07)]"><p className="text-sm text-[#63737b]">Signed in as</p><p className="mt-2 text-lg font-semibold">{user.email}</p><span className="mt-4 inline-flex rounded-full bg-[#e9f7f3] px-3 py-1.5 text-xs font-bold text-[#32776f]">{user.roleName}</span><p className="mt-6 max-w-xl text-sm leading-6 text-[#63737b]">The authentication foundation is active. This is the starting point for the Platform Super Admin screens and tenant management workflows.</p></div>
+        <nav aria-label="Workspace" className="mt-6 grid gap-4 sm:grid-cols-2">
+          {SURFACES.map((surface) => (
+            <Link
+              key={surface.href}
+              href={surface.href}
+              className="rounded-3xl border border-[#dce5e8] bg-white p-7 shadow-[0_20px_60px_rgba(25,53,64,0.07)] transition hover:border-[#83d8c6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#438d83]"
+            >
+              <p className="text-lg font-semibold">{surface.title}</p>
+              <p className="mt-2 text-sm leading-6 text-[#63737b]">{surface.hint}</p>
+            </Link>
+          ))}
+        </nav>
+      </section>
     </main>
   );
 }

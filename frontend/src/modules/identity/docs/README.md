@@ -57,7 +57,8 @@ constants.ts   Presentation tokens and the limits mirrored from LoginDto
    returns the principal, which `parseAuthSession` validates before it is
    trusted.
 3. On success the form enters `status: 'success'` and stays there. It does not
-   return to `idle` — the redirect follows after `REDIRECT_DELAY_MS`.
+   return to `idle` — the redirect to `/dashboard` follows after
+   `REDIRECT_DELAY_MS`.
 4. On failure the error is mapped: a `VALIDATION_FAILED` envelope's `details`
    array is split across the fields that produced it; anything else is shown in
    the alert banner using the message the API sent.
@@ -82,6 +83,13 @@ user and already checked for what it is safe to disclose. Re-wording them on
 the client would risk revealing more than the server intended — notably that a
 given address exists.
 
+**`/dashboard` is the one post-sign-in destination.** `proxy.ts` already sends
+`/` and an already-signed-in `/login` there, so a second landing route would
+mean two answers to "where does signing in take me". The dashboard carries the
+links to the other built surfaces until the core application framework
+(PRD §6.2) provides shared navigation; a surface reachable only by typing its
+URL is how the calendar came to be linked from nowhere.
+
 **Colour is chosen for contrast, not for the mockup.** Every foreground in
 `constants.ts` clears 4.5:1 against its surface. The greys are darker than a
 typical design comp, because sign-in is the one screen no user can skip.
@@ -101,7 +109,9 @@ npm run test          # from frontend/
 timer cleanup on unmount, client-side validation, server field-error mapping,
 lockout and throttling messages, focus movement to errors, `aria-invalid`
 wiring, heading structure, password visibility toggling, and the absence of the
-demo password from the DOM.
+demo password from the DOM. `DashboardShell.test.tsx` covers the signed-in
+identity, the loading state, the unauthenticated bounce, and a link to every
+built surface.
 
 Tenant isolation has no test here, and needs none yet: this module renders only
 the caller's own principal and holds no tenant-scoped records. That changes the

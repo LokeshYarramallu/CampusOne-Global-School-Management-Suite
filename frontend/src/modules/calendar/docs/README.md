@@ -5,6 +5,13 @@ of the DeepTrack school project's event workspace — a month grid, a selected-d
 list, aura-tinted event cards, and spring-based transitions — while staying
 inside CampusOne's own visual system.
 
+## Reaching the page
+
+`/calendar` is enrolled in `src/proxy.ts`, so a signed-out visitor is sent to
+sign-in rather than to a shell that fetches and fails. The dashboard links here;
+until the core application framework (PRD §6.2) provides shared navigation, a
+new surface has to claim both of those or it is reachable only by typed URL.
+
 ## Responsibilities
 
 - Render the calendar page for every signed-in school role.

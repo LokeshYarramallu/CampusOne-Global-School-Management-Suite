@@ -31,7 +31,9 @@ export function proxy(request: NextRequest): NextResponse {
   }
 
   const isProtected =
-    pathname.startsWith('/dashboard') || pathname.startsWith('/profile');
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/profile') ||
+    pathname.startsWith('/calendar');
   if (isProtected && !hasSession) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
@@ -42,5 +44,11 @@ export function proxy(request: NextRequest): NextResponse {
 export const config = {
   // Without a matcher this would also run for _next assets and the favicon,
   // and the redirects above would break the page it is trying to protect.
-  matcher: ['/', '/login/:path*', '/dashboard/:path*', '/profile/:path*'],
+  matcher: [
+    '/',
+    '/login/:path*',
+    '/dashboard/:path*',
+    '/profile/:path*',
+    '/calendar/:path*',
+  ],
 };

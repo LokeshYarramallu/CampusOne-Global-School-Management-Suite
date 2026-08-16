@@ -94,7 +94,7 @@ export function LoginForm() {
       // to an enabled state with a live session already open.
       setStatus('success');
       redirectTimer.current = window.setTimeout(() => {
-        router.push('/calendar');
+        router.push('/dashboard');
         router.refresh();
       }, REDIRECT_DELAY_MS);
     } catch (error) {

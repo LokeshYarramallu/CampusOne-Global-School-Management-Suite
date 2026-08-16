@@ -36,7 +36,12 @@ function setup() {
   };
 }
 
-const REDIRECT_TIMEOUT = REDIRECT_DELAY_MS * 3;
+/**
+ * The redirect is scheduled for REDIRECT_DELAY_MS; the slack on top absorbs a
+ * loaded machine running the suite's files in parallel. A multiple of the delay
+ * looked tighter but only held on an idle host.
+ */
+const REDIRECT_TIMEOUT = REDIRECT_DELAY_MS + 4000;
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));

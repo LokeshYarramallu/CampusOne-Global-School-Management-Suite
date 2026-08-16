@@ -19,5 +19,9 @@ export default defineConfig({
     },
     // Module tests live beside their module; cross-module tests live in tests/.
     include: ['src/**/*.{test,spec}.{ts,tsx}', 'tests/**/*.{test,spec}.{ts,tsx}'],
+    // The sign-in tests type with `userEvent` on real timers and then wait out
+    // REDIRECT_DELAY_MS, which alone approaches Vitest's 5s default on a slower
+    // machine. Raised so a passing test does not depend on host speed.
+    testTimeout: 15_000,
   },
 });
